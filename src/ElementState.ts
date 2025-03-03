@@ -2,14 +2,43 @@
  * Copyright - 2021 - Maleesha Gimshan (www.github.com/maleeshagimshan98)
  */
 
+
+interface ElementStateData {
+  name: string,
+  value?: boolean,
+  isAlwaysActive?: boolean
+}
+
 class ElementState {
+
+  /**
+   * name
+   * 
+   * @type {string}
+   */
+  private _name: string
+
+  /**
+   * value
+   * 
+   * @type {boolean}
+   */
+  private _value: boolean
+
+  /**
+   * isAlwaysActive
+   * 
+   * @type {boolean}
+   */
+  private _isAlwaysActive: boolean
+
   /**
    * constructor
    *
-   * @param {object}
+   * @param {ElementStateData} data
    * @returns {ElementState}
    */
-  constructor({ name, value, isAlwaysActive }) {
+  constructor({ name, value, isAlwaysActive }: ElementStateData) {
     if (!name) {
       throw new Error(`ElementState: An ElementState must have a name`)
     }
@@ -28,7 +57,7 @@ class ElementState {
    * 
    * @returns {string}
    */
-  get name () {
+  get name (): string {
     return this._name
   }
 
@@ -37,7 +66,7 @@ class ElementState {
    *
    * @returns {void} void
    */
-  active() {
+  active(): void {
     this._value = true
   }
 
@@ -46,7 +75,7 @@ class ElementState {
    *
    * @returns {void} void
    */
-  inactive() {
+  inactive(): void {
     if (this._isAlwaysActive) {
       console.warn(`Cannot turn off the an always active state - ${this._name}`)
       return
@@ -59,7 +88,7 @@ class ElementState {
    *
    * @returns {void} void
    */
-  toggle() {
+  toggle(): void {
     if (this._isAlwaysActive) {
       console.warn(`Trying to toggle the state of an always active state - ${this._name}`)
       return
@@ -76,7 +105,7 @@ class ElementState {
    * 
    * @returns {boolean}
    */
-  isActive () {
+  isActive (): boolean {
     return this._value === true
   }
 
@@ -85,7 +114,7 @@ class ElementState {
    *
    * @returns {boolean}
    */
-  isAlwaysActive() {
+  isAlwaysActive(): boolean {
     return this._isAlwaysActive
   }
 
@@ -96,7 +125,7 @@ class ElementState {
    * @returns {void}
    * @throws {Error}
    */
-  setIsAlwaysActive (value) {
+  setIsAlwaysActive (value: boolean): void {
     if (typeof value !== 'boolean') {
       throw new Error(`Trying to set the isAlwaysActive in ${this._name}. The value must be a boolean, but found ${typeof value}`)
     }
@@ -105,4 +134,4 @@ class ElementState {
   }
 }
 
-export default ElementState
+export {ElementState, ElementStateData}
