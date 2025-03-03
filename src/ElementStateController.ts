@@ -33,7 +33,7 @@ class ElementStateController {
    * @returns {void} ElementStateController
    * @throws {Error}
    */
-  constructor(elements, { activeAll, inactiveAll, multiple }: ElementStateControllerOptions) {
+  constructor(elements: Record<string, ElementState|ElementStateData>, { activeAll, inactiveAll, multiple }: ElementStateControllerOptions) {
     this._multiple = multiple ?? false
     this._initElements(elements)
 
