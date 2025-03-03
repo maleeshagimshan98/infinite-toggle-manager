@@ -2,22 +2,24 @@
   "name": "active-state-switcher",
   "version": "1.1.0",
   "description": "Are you tired of dealing with messy code when managing active state in your components? Say goodbye to complexity and embrace the simplicity of ElementStateController!",
-  "main": "src/index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist/**/*"],
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "jest"
-  },
-  "dependencies": {
+    "test": "jest",
+    "build": "tsc"
   },
   "devDependencies": {
-    "jest": "^29.6.1",
     "@babel/core": "^7.21.8",
     "@babel/preset-env": "^7.21.5",
     "@babel/register": "^7.21.0",
     "babel-core": "^7.0.0-bridge.0",
-    "babel-jest": "^29.5.0"
+    "babel-jest": "^29.5.0",
+    "jest": "^29.6.1",
+    "typescript": "^5.8.2"
   },
   "keywords": [
     "state",
