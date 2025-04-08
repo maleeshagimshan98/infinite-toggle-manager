@@ -27,9 +27,12 @@ describe('ElementState', () => {
     );
   });
 
-  test('should set value to true if always active', () => {
-    const element = new ElementState({ name: 'alwaysActiveTest', isAlwaysActive: true });
-    expect(element.isActive()).toBe(true);
+  test('should throw error if isAlwaysActive is true but value is false', () => {
+    expect(() => {
+      new ElementState({ name: 'invalidAlwaysActive', value: false, isAlwaysActive: true });
+    }).toThrow(
+      'ElementState: the element value cannot be false when isAlwaysActive is set to true in invalidAlwaysActive'
+    );
   });
 
   test('should throw error if name is missing', () => {
@@ -52,7 +55,7 @@ describe('ElementState', () => {
 
   test('should not deactivate an always active state', () => {
     console.warn = jest.fn();
-    const element = new ElementState({ name: 'alwaysActiveTest', isAlwaysActive: true });
+    const element = new ElementState({ name: 'alwaysActiveTest', value: true, isAlwaysActive: true });
     element.inactive();
     expect(console.warn).toHaveBeenCalledWith('Cannot turn off the an always active state - alwaysActiveTest');
     expect(element.isActive()).toBe(true);
@@ -69,7 +72,7 @@ describe('ElementState', () => {
 
   test('should not toggle an always active state', () => {
     console.warn = jest.fn();
-    const element = new ElementState({ name: 'alwaysActiveToggleTest', isAlwaysActive: true });
+    const element = new ElementState({ name: 'alwaysActiveToggleTest', value: true, isAlwaysActive: true });
     element.toggle();
     expect(console.warn).toHaveBeenCalledWith('Trying to toggle the state of an always active state - alwaysActiveToggleTest');
     expect(element.isActive()).toBe(true);
@@ -98,7 +101,7 @@ describe('ElementState', () => {
 
   // Method: isAlwaysActive
   test('should return true if always active', () => {
-    const element = new ElementState({ name: 'isAlwaysActiveTest', isAlwaysActive: true });
+    const element = new ElementState({ name: 'isAlwaysActiveTest', value: true, isAlwaysActive: true });
     expect(element.isAlwaysActive()).toBe(true);
   });
 
@@ -109,7 +112,7 @@ describe('ElementState', () => {
   });
 
   test('should not allow invalid state transitions', () => {
-    const element = new ElementState({ name: 'invalidTransitionTest', isAlwaysActive: true });
+    const element = new ElementState({ name: 'invalidTransitionTest', value: true, isAlwaysActive: true });
     element.inactive();
     expect(element.isActive()).toBe(true);
     element.toggle();
@@ -117,7 +120,7 @@ describe('ElementState', () => {
   });
   
   test('should set value to false when isAlwaysActive is set to false', () => {
-    const element = new ElementState({ name: 'testUnsetAlwaysActive', isAlwaysActive: true });
+    const element = new ElementState({ name: 'testUnsetAlwaysActive', value: true, isAlwaysActive: true });
     element.setIsAlwaysActive(false);
     expect(element.isActive()).toBe(false);
   });
@@ -135,7 +138,7 @@ describe('ElementState', () => {
   });
 
   test('should set isAlwaysActive to false', () => {
-    const element = new ElementState({ name: 'setNotAlwaysActiveTest', isAlwaysActive: true });
+    const element = new ElementState({ name: 'setNotAlwaysActiveTest', value: true, isAlwaysActive: true });
     element.setIsAlwaysActive(false);
     expect(element.isAlwaysActive()).toBe(false);
   });

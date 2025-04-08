@@ -46,8 +46,12 @@ class ElementState {
     if (value && typeof value !== 'boolean') {
       throw new Error(`ElementState: Invalid value type for value`)      
     }
-    this._value = value ?? false
     this._isAlwaysActive = isAlwaysActive ?? false
+
+    if (this,this._isAlwaysActive && !value) {
+      throw new Error(`ElementState: the element value cannot be false when isAlwaysActive is set to true in ${name}`);
+    }
+    this._value = value ?? false
 
     //... if always active, keep the _value true always
     if (isAlwaysActive) {
