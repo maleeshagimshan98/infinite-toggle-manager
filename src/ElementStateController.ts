@@ -2,13 +2,13 @@
  * Copyright - 2025 - Maleesha Gimshan (www.github.com/maleeshagimshan98)
  */
 
-import {ElementState, ElementStateData} from "./ElementState"
-import {ElementError, ElementErrorType } from "./Error/ElementError"
+import { ElementState, ElementStateData } from './ElementState';
+import { ElementError, ElementErrorType } from './Error/ElementError';
 
 interface ElementStateControllerOptions {
-  activeAll?: boolean,
-  inactiveAll?: boolean,
-  multiple?: boolean
+  activeAll?: boolean;
+  inactiveAll?: boolean;
+  multiple?: boolean;
 }
 
 class ElementStateController {
@@ -59,7 +59,7 @@ class ElementStateController {
    * @returns {boolean}
    * @throws {Error}
    */
-  private _allowMultipleElements(): boolean {
+  private _hasAllowedMultipleElements(): boolean {
     if (this._multiple) {
       return true;
     }
@@ -99,7 +99,7 @@ class ElementStateController {
    * @return {boolean}
    */
   private _contradictWithMultipleElementRule(isStateActive: boolean): boolean {
-    return !this._allowMultipleElements() && this._isAnyActiveStateFound && isStateActive;
+    return !this._hasAllowedMultipleElements() && this._isAnyActiveStateFound && isStateActive;
   }
 
   /**
@@ -111,7 +111,7 @@ class ElementStateController {
    */
   private _setElement(name: string, elementState: ElementState): void {
     if (this._contradictWithMultipleElementRule(elementState.isActive())) {
-      throw new Error(``); //..
+      throw new ElementError(ElementErrorType.ELEMENT_CONTRADICTS_MULTIPLE_STATE_RULE, name);
     }
     this._elements[name] = elementState;
     this._updateAnyActiveStateFound(elementState);
@@ -193,6 +193,9 @@ class ElementStateController {
       throw new Error(
         `ElementStateController: parameter elementState must be a valid object having a name property or an instance of ElementState`,
       );
+    }
+    if (this._hasElement(elementState.name)) {
+      throw new ElementError(ElementErrorType.ELEMENT_ALREADY_EXIST, elementState.name);
     }
     let element = this._createElement(elementState);
     this._setElement(element.name, element);
@@ -316,6 +319,32 @@ class ElementStateController {
       this._elements[name]?.setIsAlwaysActive(value);
     }
   }
+
+  /**
+   *
+   *
+   * @returns {boolean}
+   */
+  hasAllowMultipleElements(): boolean {
+    return this._hasAllowedMultipleElements();
+  }
+
+  /**
+   *
+   * @param {boolean}
+   * @returns {void}
+   */
+  setMultipleElementsAllowState(state: boolean): void {
+    this._multiple = state;
+  }
+
+  /**
+   *
+   * @returns {boolean}
+   */
+  hasAnyActiveStateFound(): boolean {
+    return this._isAnyActiveStateFound;
+  }
 }
 
-export default ElementStateController
+export default ElementStateController;
