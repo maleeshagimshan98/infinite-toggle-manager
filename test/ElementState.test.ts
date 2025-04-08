@@ -1,4 +1,4 @@
-import ElementState from "../src/ElementState";
+import {ElementState, ElementStateData} from "../src/ElementState";
 
 describe('ElementState', () => {
   // Constructor Tests
@@ -15,13 +15,25 @@ describe('ElementState', () => {
     expect(element.isAlwaysActive()).toBe(false);
   });
 
+  test('should throw error if name is not a string', () => {
+    expect(() => new ElementState({ name: 123 as unknown as string })).toThrow(
+      'ElementState: An ElementState must have a name'
+    );
+  });  
+  
+  test('should handle invalid value types gracefully', () => {
+    expect(() => new ElementState({ name: 'test', value: 'invalid' as unknown as boolean })).toThrow(
+      'ElementState: Invalid value type for value'
+    );
+  });
+
   test('should set value to true if always active', () => {
     const element = new ElementState({ name: 'alwaysActiveTest', isAlwaysActive: true });
     expect(element.isActive()).toBe(true);
   });
 
   test('should throw error if name is missing', () => {
-    expect(() => new ElementState({})).toThrow('ElementState: An ElementState must have a name');
+    expect(() => new ElementState({} as unknown as ElementStateData)).toThrow('ElementState: An ElementState must have a name');
   });
 
   // Method: active
@@ -63,6 +75,16 @@ describe('ElementState', () => {
     expect(element.isActive()).toBe(true);
   });
 
+  test('should toggle state multiple times', () => {
+    const element = new ElementState({ name: 'toggleMultipleTest', value: false });
+    element.toggle();
+    expect(element.isActive()).toBe(true);
+    element.toggle();
+    expect(element.isActive()).toBe(false);
+    element.toggle();
+    expect(element.isActive()).toBe(true);
+  });
+
   // Method: isActive
   test('should return true if active', () => {
     const element = new ElementState({ name: 'isActiveTest', value: true });
@@ -78,6 +100,26 @@ describe('ElementState', () => {
   test('should return true if always active', () => {
     const element = new ElementState({ name: 'isAlwaysActiveTest', isAlwaysActive: true });
     expect(element.isAlwaysActive()).toBe(true);
+  });
+
+  test('should set value to true when isAlwaysActive is set to true', () => {
+    const element = new ElementState({ name: 'testSetAlwaysActive' });
+    element.setIsAlwaysActive(true);
+    expect(element.isActive()).toBe(true);
+  });
+
+  test('should not allow invalid state transitions', () => {
+    const element = new ElementState({ name: 'invalidTransitionTest', isAlwaysActive: true });
+    element.inactive();
+    expect(element.isActive()).toBe(true);
+    element.toggle();
+    expect(element.isActive()).toBe(true);
+  });
+  
+  test('should set value to false when isAlwaysActive is set to false', () => {
+    const element = new ElementState({ name: 'testUnsetAlwaysActive', isAlwaysActive: true });
+    element.setIsAlwaysActive(false);
+    expect(element.isActive()).toBe(false);
   });
 
   test('should return false if not always active', () => {
@@ -100,8 +142,16 @@ describe('ElementState', () => {
 
   test('should throw error on invalid isAlwaysActive value', () => {
     const element = new ElementState({ name: 'invalidActiveTest' });
-    expect(() => element.setIsAlwaysActive('notBoolean')).toThrow(
+    expect(() => element.setIsAlwaysActive('' as unknown as boolean)).toThrow(
       'Trying to set the isAlwaysActive in invalidActiveTest. The value must be a boolean, but found string'
     );
+  });
+
+  test('should handle a large number of ElementState instances', () => {
+    const elements: ElementState[] = [];
+    for (let i = 0; i < 10000; i++) {
+      elements.push(new ElementState({ name: `element${i}` }));
+    }
+    expect(elements.length).toBe(10000);
   });
 });
