@@ -39,10 +39,13 @@ class ElementState {
    * @returns {ElementState}
    */
   constructor({ name, value, isAlwaysActive }: ElementStateData) {
-    if (!name) {
+    if (!name || typeof name !== 'string') {
       throw new Error(`ElementState: An ElementState must have a name`)
     }
     this._name = name
+    if (value && typeof value !== 'boolean') {
+      throw new Error(`ElementState: Invalid value type for value`)      
+    }
     this._value = value ?? false
     this._isAlwaysActive = isAlwaysActive ?? false
 
