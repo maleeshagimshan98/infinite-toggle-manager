@@ -3,6 +3,7 @@
  */
 
 import {ElementState, ElementStateData} from "./ElementState"
+import {ElementError, ElementErrorType } from "./Error/ElementError"
 
 interface ElementStateControllerOptions {
   activeAll?: boolean,
@@ -14,17 +15,17 @@ class ElementStateController {
   /**
    * contains the ElementStates
    */
-  private _elements: Record<string,ElementState> = {}
+  private _elements: Record<string, ElementState> = {};
 
   /**
    * Set to true to activate multiple element states simultaniousely
    */
-  private _multiple: boolean = false
+  private _multiple: boolean = false;
 
   /**
    * Indicates wheher any element state is active or not
    */
-  private _isAnyActiveStateFound: boolean = false
+  private _isAnyActiveStateFound: boolean = false;
 
   /**
    * constructor
@@ -33,72 +34,72 @@ class ElementStateController {
    * @returns {void} ElementStateController
    * @throws {Error}
    */
-  constructor(elements: Record<string, ElementState|ElementStateData>, { activeAll, inactiveAll, multiple }: ElementStateControllerOptions) {
-    this._multiple = multiple ?? false
-    this._initElements(elements)
+  constructor(
+    elements: Record<string, ElementState | ElementStateData>,
+    { activeAll, inactiveAll, multiple }: ElementStateControllerOptions,
+  ) {
+    this._multiple = multiple ?? false;
+    this._initElements(elements);
 
     if (activeAll && inactiveAll) {
-      throw new Error(
-        `ElementStateController: activeAll and inactiveAll cannot be true at the same time`
-      )
+      throw new Error(`ElementStateController: activeAll and inactiveAll cannot be true at the same time`);
     }
 
     if (activeAll) {
-      this.activeAll()
+      this.activeAll();
     }
     if (inactiveAll) {
-      this.inactiveAll()
+      this.inactiveAll();
     }
   }
 
   /**
-   * 
-   * 
+   *
+   *
    * @returns {boolean}
    * @throws {Error}
    */
-  private _allowMultipleElements (): boolean {    
+  private _allowMultipleElements(): boolean {
     if (this._multiple) {
-      return true
+      return true;
     }
     if (!this._multiple && this._isAnyActiveStateFound) {
-      return false
-    }
-    else {
-      return true
+      return false;
+    } else {
+      return true;
     }
   }
 
   /**
    * Set isAnyActiveStateFound property
-   * 
+   *
    * @param {boolean} value
    * @returns {void}
    */
-  private _setActiveStateFound (value: boolean): void {
-    this._isAnyActiveStateFound = value
+  private _setActiveStateFound(value: boolean): void {
+    this._isAnyActiveStateFound = value;
   }
 
   /**
    * Set isAnyActiveStateFound to true
-   * 
+   *
    * @param {ElementState} elementState
    * @returns {void}
    */
   private _updateAnyActiveStateFound(elementState: ElementState): void {
     if (elementState.isActive()) {
-      this._setActiveStateFound(true)
+      this._setActiveStateFound(true);
     }
   }
 
   /**
    * Checks if the state's active status is contradicting with multiple active states rule
-   * 
+   *
    * @param {boolean} isStateActive element's active status
    * @return {boolean}
    */
-  private _contradictWithMultipleElementRule (isStateActive: boolean): boolean {
-    return !this._allowMultipleElements() && this._isAnyActiveStateFound && isStateActive
+  private _contradictWithMultipleElementRule(isStateActive: boolean): boolean {
+    return !this._allowMultipleElements() && this._isAnyActiveStateFound && isStateActive;
   }
 
   /**
@@ -110,12 +111,12 @@ class ElementStateController {
    */
   private _setElement(name: string, elementState: ElementState): void {
     if (this._contradictWithMultipleElementRule(elementState.isActive())) {
-      throw new Error(``) //..
+      throw new Error(``); //..
     }
-    this._elements[name] = elementState
-    this._updateAnyActiveStateFound(elementState)
+    this._elements[name] = elementState;
+    this._updateAnyActiveStateFound(elementState);
   }
-  
+
   /**
    * Create a new instance of ElementState or return the passed argument if it is an instance of ElementState
    *
@@ -125,15 +126,14 @@ class ElementStateController {
    */
   private _createElement(elementState: ElementStateData | ElementState): ElementState {
     if (elementState instanceof ElementState) {
-      return elementState
+      return elementState;
     }
     if (Object.keys(elementState).length > 0) {
-      return new ElementState(elementState)
+      return new ElementState(elementState);
+    } else {
+      throw new Error(`ElementStateController: Cannot create the state with an empty object`);
     }
-    else {
-      throw new Error(`ElementStateController: Cannot create the state with an empty object`)
-    }
-  }  
+  }
 
   /**
    * initialise the elements passed into constructor
@@ -142,16 +142,16 @@ class ElementStateController {
    * @returns {void} void
    * @throws {Error}
    */
-  private _initElements(elements: Record<string,ElementState | ElementStateData>): void {
+  private _initElements(elements: Record<string, ElementState | ElementStateData>): void {
     for (let element in elements) {
       if (elements[element] instanceof ElementState) {
-        this._setElement(element, elements[element])
-        continue
+        this._setElement(element, elements[element]);
+        continue;
       }
-      if (Object.keys(elements[element]).length > 0) {
-        this._setElement(element, new ElementState(elements[element]))
+      if (elements[element] && Object.keys(elements[element]).length > 0) {
+        this._setElement(element, new ElementState(elements[element]));
       } else {
-        throw new Error(`ElementStateController: Cannot initialise the states`)
+        throw new Error(`ElementStateController: Cannot initialise the states`);
       }
     }
   }
@@ -160,13 +160,11 @@ class ElementStateController {
    * check if the given element is available
    *
    * @param {string} name
-   * @returns {void} void
+   * @returns {boolean} void
    * @throws {Error}
    */
-  private _throwErrorIfElementNotDefined(name: string): void {
-    if (!this._elements.hasOwnProperty(name)) {
-      throw new Error(`ElementStateController: An element with name - ${name} is not defined`)
-    }
+  private _hasElement(name: string): boolean {
+    return Object.prototype.hasOwnProperty.call(this._elements, name) && this._elements[name] instanceof ElementState;
   }
 
   /**
@@ -174,10 +172,13 @@ class ElementStateController {
    *
    * @param {string} name elementState name
    * @returns {ElementState}
+   * @throws {ElementError}
    */
   getElement(name: string): ElementState {
-    this._throwErrorIfElementNotDefined(name)
-    return this._elements[name]
+    if (!this._hasElement(name)) {
+      throw new ElementError(ElementErrorType.ELEMENT_NOT_SET, name);
+    }
+    return this._elements[name]!;
   }
 
   /**
@@ -190,11 +191,11 @@ class ElementStateController {
   addElement(elementState: ElementState | ElementStateData): void {
     if (!elementState || Object.keys(elementState).length == 0) {
       throw new Error(
-        `ElementStateController: parameter elementState must be a valid object having a name property or an instance of ElementState`
-      )
+        `ElementStateController: parameter elementState must be a valid object having a name property or an instance of ElementState`,
+      );
     }
-    let element = this._createElement(elementState)
-    this._setElement(element.name, element)
+    let element = this._createElement(elementState);
+    this._setElement(element.name, element);
   }
 
   /**
@@ -205,14 +206,14 @@ class ElementStateController {
   activeAll(): void {
     if (!this._multiple) {
       console.warn(
-        `ElementStateController: Cannot turn on all the elements - ElementStateController.multiple is set to ${this._multiple}`
-      )
-      return
+        `ElementStateController: Cannot turn on all the elements - ElementStateController.multiple is set to ${this._multiple}`,
+      );
+      return;
     }
     for (let element in this._elements) {
-      this._elements[element].active()
+      this._elements[element]?.active();
     }
-    this._setActiveStateFound(true)
+    this._setActiveStateFound(true);
   }
 
   /**
@@ -222,10 +223,12 @@ class ElementStateController {
    */
   inactiveAll(): void {
     for (let element in this._elements) {
-      this._elements[element].inactive()
-      this._setActiveStateFound(false)
-      this._updateAnyActiveStateFound(this._elements[element])
-    }    
+      if (this._elements[element]) {
+        this._elements[element].inactive();
+        this._setActiveStateFound(false);
+        this._updateAnyActiveStateFound(this._elements[element]);
+      }
+    }
   }
 
   /**
@@ -235,12 +238,15 @@ class ElementStateController {
    * @returns {void} void
    */
   active(name: string): void {
-    this._throwErrorIfElementNotDefined(name)
-    if (this._contradictWithMultipleElementRule(true)) {
-      throw new Error(``) //... cannot set the state to active - contradicts with multiple active state rule      
+    if (!this._hasElement(name)) {
+      throw new ElementError(ElementErrorType.ELEMENT_NOT_SET, name);
     }
-    this._elements[name].active()
-    this._setActiveStateFound(true)
+    if (this._contradictWithMultipleElementRule(true)) {
+      //... cannot set the state to active - contradicts with multiple active state rule
+      throw new ElementError(ElementErrorType.ELEMENT_CONTRADICTS_MULTIPLE_STATE_RULE, name);
+    }
+    this._elements[name]?.active();
+    this._setActiveStateFound(true);
   }
 
   /**
@@ -250,8 +256,10 @@ class ElementStateController {
    * @returns {void} void
    */
   inactive(name: string): void {
-    this._throwErrorIfElementNotDefined(name)
-    this._elements[name].inactive()
+    if (!this._hasElement(name)) {
+      throw new ElementError(ElementErrorType.ELEMENT_NOT_SET, name);
+    }
+    this._elements[name]?.inactive();
   }
 
   /**
@@ -263,45 +271,49 @@ class ElementStateController {
    * @throws {Error}
    */
   toggle(name: string): void {
-    this._throwErrorIfElementNotDefined(name)
-    if (this._elements[name].isAlwaysActive()) {
+    if (!this._hasElement(name)) {
+      throw new ElementError(ElementErrorType.ELEMENT_NOT_SET, name);
+    }
+    if (this._elements[name]?.isAlwaysActive()) {
       //... keep element active
-      console.warn(
-        `ElementStateController: Trying to toggle the state of an always on element - ${name}`
-      )
-      return
-    }    
-    
+      console.warn(`ElementStateController: Trying to toggle the state of an always on element - ${name}`);
+      return;
+    }
+
     for (let element in this._elements) {
-      let togglingElementState = this._elements[element]
-      if (togglingElementState.isAlwaysActive()) {
-        //... keep element active
-        continue
+      let togglingElementState = this._elements[element];
+      if (togglingElementState) {
+        if (togglingElementState.isAlwaysActive()) {
+          //... keep element active
+          continue;
+        }
+        if (this._contradictWithMultipleElementRule(togglingElementState.isActive() ? false : true)) {
+          //... cannot toggle this state - contradicts with the multiple elements rule
+          throw new ElementError(ElementErrorType.ELEMENT_CONTRADICTS_MULTIPLE_STATE_RULE, element);
+        }
+        togglingElementState.toggle();
       }
-      if (this._contradictWithMultipleElementRule(togglingElementState.isActive() ? false : true)) {
-        throw new Error(``) //... cannot toggle this state - contradicts with the multiple elements rule  
-      }
-      togglingElementState.toggle()
     }
   }
 
   /**
    * Set isAlwaysActive property on a state
-   * 
+   *
    * @param {string} name element state name
    * @param {boolean} value value to set
    * @returns {void}
-   * @throws {Error}
+   * @throws {ElementError}
    */
-  setIsAlwaysActive (name: string, value: boolean): void {
-    this._throwErrorIfElementNotDefined(name)
+  setIsAlwaysActive(name: string, value: boolean): void {
+    if (!this._hasElement(name)) {
+      throw new ElementError(ElementErrorType.ELEMENT_NOT_SET, name);
+    }
 
     if (this._contradictWithMultipleElementRule(true)) {
-      throw new Error(`ElementStateController: Contradicts with multiple elements rule, cannot set isAlwaysActive on ${name}.`)
+      throw new ElementError(ElementErrorType.ELEMENT_CONTRADICTS_MULTIPLE_STATE_RULE, name);
     }
-    if (value === false)    {
-      this._elements[name].setIsAlwaysActive(value)
-      return
+    if (value === false) {
+      this._elements[name]?.setIsAlwaysActive(value);
     }
   }
 }
