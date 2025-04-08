@@ -1,5 +1,5 @@
-import ElementStateController from "./ElementStateController"
-import {ElementState, ElementStateData} from "./ElementState"
-import { ElementError } from "./Error/ElementError";
+import ElementStateController from './ElementStateController';
+import { ElementState, ElementStateData } from './ElementState';
+import { ElementError } from './Error/ElementError';
 
-export {ElementStateController, ElementState, ElementStateData, ElementError};
+export { ElementStateController, ElementState, ElementStateData, ElementError };

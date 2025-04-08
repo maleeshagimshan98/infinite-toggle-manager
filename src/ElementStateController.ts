@@ -2,7 +2,8 @@
  * Copyright - 2025 - Maleesha Gimshan (www.github.com/maleeshagimshan98)
  */
 
-import { ElementState, ElementStateData } from './ElementState';
+import { ElementState } from './ElementState';
+import type { ElementStateData } from './ElementState';
 import { ElementError, ElementErrorType } from './Error/ElementError';
 
 interface ElementStateControllerOptions {
@@ -143,7 +144,7 @@ class ElementStateController {
    * @throws {Error}
    */
   private _initElements(elements: Record<string, ElementState | ElementStateData>): void {
-    for (let element in elements) {
+    for (const element in elements) {
       if (elements[element] instanceof ElementState) {
         this._setElement(element, elements[element]);
         continue;
@@ -197,7 +198,7 @@ class ElementStateController {
     if (this._hasElement(elementState.name)) {
       throw new ElementError(ElementErrorType.ELEMENT_ALREADY_EXIST, elementState.name);
     }
-    let element = this._createElement(elementState);
+    const element = this._createElement(elementState);
     this._setElement(element.name, element);
   }
 
@@ -213,7 +214,7 @@ class ElementStateController {
       );
       return;
     }
-    for (let element in this._elements) {
+    for (const element in this._elements) {
       this._elements[element]?.active();
     }
     this._setActiveStateFound(true);
@@ -225,7 +226,7 @@ class ElementStateController {
    * @returns {void} void
    */
   inactiveAll(): void {
-    for (let element in this._elements) {
+    for (const element in this._elements) {
       if (this._elements[element]) {
         this._elements[element].inactive();
         this._setActiveStateFound(false);
@@ -283,8 +284,8 @@ class ElementStateController {
       return;
     }
 
-    for (let element in this._elements) {
-      let togglingElementState = this._elements[element];
+    for (const element in this._elements) {
+      const togglingElementState = this._elements[element];
       if (togglingElementState) {
         if (togglingElementState.isAlwaysActive()) {
           //... keep element active

@@ -1,7 +1,7 @@
 enum ElementErrorType {
   'ELEMENT_NOT_SET',
   'ELEMENT_ALREADY_EXIST',
-  'ELEMENT_CONTRADICTS_MULTIPLE_STATE_RULE'
+  'ELEMENT_CONTRADICTS_MULTIPLE_STATE_RULE',
 }
 
 const errorMessage = {
@@ -13,7 +13,7 @@ const errorMessage = {
   },
   [ElementErrorType.ELEMENT_CONTRADICTS_MULTIPLE_STATE_RULE]: (name: string): string => {
     return `ActiveStateSwitcher - An element with name ${name} contradicts with multiple active state rule.`;
-  }
+  },
 };
 
 class ElementError extends Error {

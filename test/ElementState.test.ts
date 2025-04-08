@@ -1,4 +1,4 @@
-import {ElementState, ElementStateData} from "../src/ElementState";
+import { ElementState, ElementStateData } from '../src/ElementState';
 
 describe('ElementState', () => {
   // Constructor Tests
@@ -17,13 +17,13 @@ describe('ElementState', () => {
 
   test('should throw error if name is not a string', () => {
     expect(() => new ElementState({ name: 123 as unknown as string })).toThrow(
-      'ElementState: An ElementState must have a name'
+      'ElementState: An ElementState must have a name',
     );
-  });  
-  
+  });
+
   test('should handle invalid value types gracefully', () => {
     expect(() => new ElementState({ name: 'test', value: 'invalid' as unknown as boolean })).toThrow(
-      'ElementState: Invalid value type for value'
+      'ElementState: Invalid value type for value',
     );
   });
 
@@ -31,12 +31,14 @@ describe('ElementState', () => {
     expect(() => {
       new ElementState({ name: 'invalidAlwaysActive', value: false, isAlwaysActive: true });
     }).toThrow(
-      'ElementState: the element value cannot be false when isAlwaysActive is set to true in invalidAlwaysActive'
+      'ElementState: the element value cannot be false when isAlwaysActive is set to true in invalidAlwaysActive',
     );
   });
 
   test('should throw error if name is missing', () => {
-    expect(() => new ElementState({} as unknown as ElementStateData)).toThrow('ElementState: An ElementState must have a name');
+    expect(() => new ElementState({} as unknown as ElementStateData)).toThrow(
+      'ElementState: An ElementState must have a name',
+    );
   });
 
   // Method: active
@@ -74,7 +76,9 @@ describe('ElementState', () => {
     console.warn = jest.fn();
     const element = new ElementState({ name: 'alwaysActiveToggleTest', value: true, isAlwaysActive: true });
     element.toggle();
-    expect(console.warn).toHaveBeenCalledWith('Trying to toggle the state of an always active state - alwaysActiveToggleTest');
+    expect(console.warn).toHaveBeenCalledWith(
+      'Trying to toggle the state of an always active state - alwaysActiveToggleTest',
+    );
     expect(element.isActive()).toBe(true);
   });
 
@@ -118,7 +122,7 @@ describe('ElementState', () => {
     element.toggle();
     expect(element.isActive()).toBe(true);
   });
-  
+
   test('should set value to false when isAlwaysActive is set to false', () => {
     const element = new ElementState({ name: 'testUnsetAlwaysActive', value: true, isAlwaysActive: true });
     element.setIsAlwaysActive(false);
@@ -146,7 +150,7 @@ describe('ElementState', () => {
   test('should throw error on invalid isAlwaysActive value', () => {
     const element = new ElementState({ name: 'invalidActiveTest' });
     expect(() => element.setIsAlwaysActive('' as unknown as boolean)).toThrow(
-      'Trying to set the isAlwaysActive in invalidActiveTest. The value must be a boolean, but found string'
+      'Trying to set the isAlwaysActive in invalidActiveTest. The value must be a boolean, but found string',
     );
   });
 

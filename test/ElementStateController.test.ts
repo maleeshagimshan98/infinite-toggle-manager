@@ -22,20 +22,20 @@ describe('ElementStateController', () => {
   test('should throw an error when trying to activate all elements if multiple is set to false', () => {
     // Mock console.warn
     const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-  
+
     const elements = {
       element1: { name: 'element1' },
       element2: { name: 'element2' },
     };
-  
+
     // Test the behavior
     new ElementStateController(elements, { activeAll: true });
-  
+
     // Assert that console.warn was called with the expected message
     expect(consoleWarnSpy).toHaveBeenCalledWith(
-      'ElementStateController: Cannot turn on all the elements - ElementStateController.multiple is set to false'
+      'ElementStateController: Cannot turn on all the elements - ElementStateController.multiple is set to false',
     );
-  
+
     // Restore the original console.warn
     consoleWarnSpy.mockRestore();
   });
@@ -72,15 +72,19 @@ describe('ElementStateController', () => {
     const controller = new ElementStateController({}, { multiple: false });
     const elementState1 = new ElementState({ name: 'test1', value: true, isAlwaysActive: true });
     const elementState2 = new ElementState({ name: 'test2', value: true, isAlwaysActive: true });
-    controller.addElement(elementState1)    
-    expect(() => controller.addElement(elementState2)).toThrow(`An element with name test2 contradicts with multiple active state rule`);
+    controller.addElement(elementState1);
+    expect(() => controller.addElement(elementState2)).toThrow(
+      `An element with name test2 contradicts with multiple active state rule`,
+    );
   });
 
   test('addElement should throw error for empty object', () => {
     const controller = new ElementStateController({}, {});
     expect(() => {
       controller.addElement({} as unknown as ElementStateData);
-    }).toThrow('ElementStateController: parameter elementState must be a valid object having a name property or an instance of ElementState');
+    }).toThrow(
+      'ElementStateController: parameter elementState must be a valid object having a name property or an instance of ElementState',
+    );
   });
 
   // Method: _initElements

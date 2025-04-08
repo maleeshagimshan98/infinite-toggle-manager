@@ -4,7 +4,9 @@
   "description": "Are you tired of dealing with messy code when managing active state in your components? Say goodbye to complexity and embrace the simplicity of ElementStateController!",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist/**/*"],
+  "files": [
+    "dist/**/*"
+  ],
   "directories": {
     "test": "test"
   },

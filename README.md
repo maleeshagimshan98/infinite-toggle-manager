@@ -7,6 +7,7 @@ Are you tired of dealing with messy code when managing active states for muliple
 ## Table of Contents
 
 - [ElementStateController](#elementstatecontroller)
+
   - [Usability](#usability)
   - [Key Features](#key-features)
   - [Constructor](#constructor)
@@ -48,22 +49,22 @@ ElementStateController and ElementState are two JavaScript classes that provide 
 constructor(elements: Object, options: Object)
 ```
 
-| Parameter | Type | Description |
-| --- | --- | --- |
-| elements | Object | A collection of elements to be managed. Each key represents the element name, and the value can be either an instance of `ElementState` or a plain object representing the element state. |
-| options | Object | An optional object that can contain the following properties:<br>`activeAll`: A boolean value to determine whether all elements should be turned on initially.<br>`inactiveAll`: A boolean value to determine whether all elements should be initially inactive.<br>`multiple`: A boolean value to allow turning on multiple elements at once. |
+| Parameter | Type   | Description                                                                                                                                                                                                                                                                                                                                    |
+| --------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| elements  | Object | A collection of elements to be managed. Each key represents the element name, and the value can be either an instance of `ElementState` or a plain object representing the element state.                                                                                                                                                      |
+| options   | Object | An optional object that can contain the following properties:<br>`activeAll`: A boolean value to determine whether all elements should be turned on initially.<br>`inactiveAll`: A boolean value to determine whether all elements should be initially inactive.<br>`multiple`: A boolean value to allow turning on multiple elements at once. |
 
 ### Methods
 
-| Method | Description |
-| --- | --- |
-| `addElement(name: string, elementState: Object): void` | Adds a new element to the `ElementStateController`. |
-| `getElement(name: string): ElementState` | Get an element state|
-| `activeAll(): void` | Turns on all elements managed by the `ElementStateController`. |
-| `inactiveAll(): void` | Turns off all elements managed by the `ElementStateController`. |
-| `active(name: string): void` | Turns on the specified element by its name. |
-| `inactive(name: string): void` | Turns off the specified element by its name. |
-| `toggle(name: string): void` | Toggles the specified element by its name. |
+| Method                                                  | Description                                                      |
+| ------------------------------------------------------- | ---------------------------------------------------------------- |
+| `addElement(name: string, elementState: Object): void`  | Adds a new element to the `ElementStateController`.              |
+| `getElement(name: string): ElementState`                | Get an element state                                             |
+| `activeAll(): void`                                     | Turns on all elements managed by the `ElementStateController`.   |
+| `inactiveAll(): void`                                   | Turns off all elements managed by the `ElementStateController`.  |
+| `active(name: string): void`                            | Turns on the specified element by its name.                      |
+| `inactive(name: string): void`                          | Turns off the specified element by its name.                     |
+| `toggle(name: string): void`                            | Toggles the specified element by its name.                       |
 | `setIsAlwaysActive(name: string, value: boolean): void` | Set isAlwaysActive property on an element specified by the name. |
 
 ### Example
@@ -72,11 +73,11 @@ constructor(elements: Object, options: Object)
 // Creating a new ElementStateController instance with initial states
 const states = {
   state1: new ElementState({ name: 'state1', value: false }),
-  state2: { name: 'state2', value: true, isAlwaysActive: true }
+  state2: { name: 'state2', value: true, isAlwaysActive: true },
 };
 const options = {
   activeAll: true, // Turn all states are in active initially
-  multiple : true // Allow multiple states to be active simultaneously
+  multiple: true, // Allow multiple states to be active simultaneously
 };
 const elementStateController = new ElementStateController(elements, options);
 
@@ -102,22 +103,22 @@ The `ElementState` class represents an individual element state. It allows you t
 constructor({ name: string, value: boolean, isAlwaysActive?: boolean })
 ```
 
-| Parameter | Type | Description |
-| --- | --- | --- |
-| name | String | The name of the element. |
-| value | Boolean | The initial value of the element (true for active, false for inactive). |
+| Parameter      | Type    | Description                                                                                                                      |
+| -------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| name           | String  | The name of the element.                                                                                                         |
+| value          | Boolean | The initial value of the element (true for active, false for inactive).                                                          |
 | isAlwaysActive | Boolean | An optional parameter that determines if the element's state should always be active and cannot be inactive. Default is `false`. |
 
 ### Methods
 
-| Method | Description |
-| --- | --- |
-| `active(): void` | Turns on the element. |
-| `inactive(): void` | Turns off the element. |
-| `toggle(): void` | Toggles the value of the element between active and inactive. |
-| `isActive(): void` | Checks if the element state is active or inactive. |
-| `isAlwaysActive(): boolean` | Returns a boolean value indicating if the element state is set to always active. |
-| `setIsAlwaysActive(value): void` | Sets the state is always active or not. |
+| Method                           | Description                                                                      |
+| -------------------------------- | -------------------------------------------------------------------------------- |
+| `active(): void`                 | Turns on the element.                                                            |
+| `inactive(): void`               | Turns off the element.                                                           |
+| `toggle(): void`                 | Toggles the value of the element between active and inactive.                    |
+| `isActive(): void`               | Checks if the element state is active or inactive.                               |
+| `isAlwaysActive(): boolean`      | Returns a boolean value indicating if the element state is set to always active. |
+| `setIsAlwaysActive(value): void` | Sets the state is always active or not.                                          |
 
 ### Example
 
