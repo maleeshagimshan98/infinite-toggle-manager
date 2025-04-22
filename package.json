@@ -1,6 +1,6 @@
 {
   "name": "active-state-switcher",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Are you tired of dealing with messy code when managing active state in your components? Say goodbye to complexity and embrace the simplicity of ElementStateController!",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
