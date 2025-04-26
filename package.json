@@ -1,5 +1,5 @@
 {
-  "name": "active-state-switcher",
+  "name": "infinite-toggle-manager",
   "version": "1.2.0",
   "description": "Are you tired of dealing with messy code when managing active state in your components? Say goodbye to complexity and embrace the simplicity of ElementStateController!",
   "main": "dist/index.js",
@@ -38,6 +38,8 @@
   },
   "keywords": [
     "state",
+    "toggle",
+    "toggle manager",
     "state controller",
     "active",
     "react",
