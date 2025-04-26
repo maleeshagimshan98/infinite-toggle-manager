@@ -1,8 +1,18 @@
-# Active-State-Switcher
+# Infinite-Toggle-Manager
 
-Introducing Active State Switcher – The Ultimate JavaScript Class for Efficient Management Of Active State In Anything But Javascript! 🚀
+A Lightweight JavaScript Toggle Manager for Effortless State Control! 🚀
 
-Are you tired of dealing with messy code when managing active states for multiple things (Probably HTML elements/Components) in your application? Say goodbye to complexity and embrace the simplicity of Active-State-Switcher!
+Tired of juggling messy classList.toggle() calls or tracking active states across multiple elements/components? Infinite-Toggle-Manager simplifies it all!
+
+✨ Why use it?
+
+🔄 Toggle anything – Manage active/inactive states for HTML elements, UI components, or even JS objects.
+
+🧩 Minimal setup – Ditch manual state checks and let this class handle the logic.
+
+🚫 No more conflicts – Cleanly enforce single-active or multi-active states without spaghetti code.
+
+Perfect for tabs, modals, menus, or any interactive UI!
 
 ## Table of Contents
 
@@ -10,7 +20,7 @@ Are you tired of dealing with messy code when managing active states for multipl
   - [Usability](#usability)
   - [Key Features](#key-features)
   - [Constructor](#constructor)
-  - [addElement(name: string, elementState: Object)](#addswitchname-string-switchobj-object)
+  - [addElement(name: string, elementState: ElementState | ElementStateData)](#addswitchname-string-switchobj-object)
   - [activeAll()](#activeall)
   - [inactiveAll()](#inactiveall)
   - [active(name: string)](#onname-string)
@@ -38,7 +48,7 @@ Are you tired of dealing with messy code when managing active states for multipl
 
 ElementStateController and ElementState are two JavaScript classes that provide a convenient and versatile way to manage states. The classes allow you to control a group of items' states.
 
-🔧 Seamlessly Control Element States: With ElementStateController, you can effortlessly make active, inactive, or toggle states of the elements, giving you complete control over their functionality. 💡
+🔧 Control Element States: With ElementStateController, you can effortlessly make active, inactive, or toggle states of the elements, giving you complete control over their functionality. 💡
 
 🎯 Perfect for Every Use Case: Whether it's managing user settings, controlling UI elements, or implementing dynamic behavior, ElementStateController has got you covered! 🧩
 
