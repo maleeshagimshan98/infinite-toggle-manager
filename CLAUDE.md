@@ -12,7 +12,9 @@ This file guides Claude Code when it works in this repository.
   `package.json`, `vite.config.ts`, any `tsconfig*.json` or `eslint.config.mjs`.
 - Naming history: the local folder is `active-state-switcher` and the GitHub repo is `vue-switch-controller`. Older code
   used `SwitchController` / `SwitchState` with `on` / `off`. None of that exists on `master`, so always use the current
-  names (`ElementStateController`, `ElementState`, `active` / `inactive`, `isAlwaysActive`).
+  names (`ElementState`, `active` / `inactive`, `isAlwaysActive`).
+- In `src/`, the controller class is `InfiniteToggleManager` and its error class is `InfiniteToggleManagerError`.
+  `src/index.ts` still exports them under their public names, `ElementStateController` and `ElementControllerError`.
 
 ## Working here with Claude Code
 
@@ -35,8 +37,8 @@ This file guides Claude Code when it works in this repository.
 | Task      | Command                                                 | Notes                                                                             |
 | --------- | ------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | Install   | `npm ci`                                                | Installs exactly what `package-lock.json` pins                                    |
-| Test      | `npm test`                                              | Jest 29 + ts-jest (compiled through `tsconfig.test.json`); 48 tests               |
-| One file  | `npx jest test/ElementState.test.ts`                    |                                                                                   |
+| Test      | `npm test`                                              | Jest 29 + ts-jest (compiled through `tsconfig.test.json`); 50 tests               |
+| One file  | `npx jest test/element-state.test.ts`                   |                                                                                   |
 | One test  | `npx jest -t "toggle should toggle a specific element"` |                                                                                   |
 | Typecheck | `npm run typecheck`                                     | `tsc -p tsconfig.json`: `src/`, `test/` and `vite.config.ts`; emits nothing       |
 | Lint      | `npm run lint` / `npm run lint:fix`                     | ESLint 10, type-aware; covers `src/`, `test/` and config files; expect 0 problems |
@@ -49,18 +51,19 @@ This file guides Claude Code when it works in this repository.
 
 ```
 src/
-  index.ts                  public entry: named exports ElementStateController, ElementState,
-                            ElementStateData (type), ElementControllerError. ElementControllerErrorType is NOT exported here.
-  ElementState.ts           one element's state; exports ElementState, ElementStateData
-  ElementStateController.ts manages a named group of states; DEFAULT export
-  Error/ElementControllerError.ts
-                            ElementControllerError class + ElementControllerErrorType enum
+  index.ts                    public entry. Named exports: ElementStateController (InfiniteToggleManager),
+                              ElementState, ElementStateData (type), ElementControllerError (InfiniteToggleManagerError).
+                              ToggleManagerErrorType is NOT exported here.
+  element-state.ts            one element's state; exports ElementState, isElementStateData, ElementStateData (type)
+  infinite-toggle-manager.ts  InfiniteToggleManager: manages a named group of states; DEFAULT export
+  error/infinite-toggle-manager.error.ts
+                              InfiniteToggleManagerError class + ToggleManagerErrorType enum
 test/
-  ElementState.test.ts            ts-jest; tests import from ../src/*.js
-  ElementStateController.test.ts
-docs/library-rules.md       build, packaging and config rules
-docs/TODO                   owner's notes on open work
-dist/                       build output (gitignored)
+  element-state.test.ts            ts-jest; tests import from ../src/*.js
+  infinite-toggle-manager.test.ts
+docs/library-rules.md         build, packaging and config rules
+docs/TODO                     owner's notes on open work
+dist/                         build output (gitignored)
 ```
 
 Config files:
@@ -84,7 +87,7 @@ Config files:
   `setIsAlwaysActive(bool)`. Passing `true` also activates the state; passing `false` clears the flag, then deactivates.
 - On an always-active state, `inactive()` and `toggle()` call `console.warn` and do nothing. They do not throw.
 
-### ElementStateController
+### ElementStateController (`InfiniteToggleManager`)
 
 - `new ElementStateController(elements, options)`
   - `elements`: `Record<string, ElementState | ElementStateData>`. **The record key is the lookup name**, not
@@ -107,9 +110,11 @@ Config files:
 
 ### Errors
 
-- Input validation throws a plain `Error` prefixed with the class name: `ElementState: …`, `ElementStateController: …`.
-- Lookups, duplicates and single-active rule violations throw `ElementControllerError`. Its message starts with
-  `ActiveStateSwitcher - ` and `.type` is a numeric `ElementControllerErrorType`.
+- Input validation throws a plain `Error` prefixed with the public class name: `ElementState: …`,
+  `ElementStateController: …`.
+- Lookups, duplicates and single-active rule violations throw `InfiniteToggleManagerError` (public name
+  `ElementControllerError`). Its message starts with `InfiniteToggleManager - ` and `.type` is a numeric
+  `ToggleManagerErrorType`.
 - Tests assert exact message strings. If you change a message, update the tests in the same change.
 
 ## Known bugs (verified on `master`)
@@ -133,7 +138,7 @@ with tests.
 
 Minor issues:
 
-- `ElementControllerErrorType` isn't exported from `src/index.ts`.
+- `ToggleManagerErrorType` isn't exported from `src/index.ts`.
 - There's a stray comma expression `(this, …)` in the `ElementState` constructor.
 - The README has broken anchors and the old `addElement(name, …)` signature.
 - The README links to a `LICENSE` file that doesn't exist.
@@ -143,7 +148,9 @@ Minor issues:
 - TypeScript `strict`, plus `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess` and `noUnusedParameters`. Because of
   `noUncheckedIndexedAccess`, record lookups have type `T | undefined`. Existing code uses `?.` after a `_hasElement`
   check, so follow that or narrow explicitly.
-- **Relative imports end in `.js`**, as in `from './ElementState.js'`, even though the files are `.ts`. `NodeNext`
+- File and folder names are kebab-case, as in `element-state.ts` and `error/infinite-toggle-manager.error.ts`. A test
+  file takes its source file's name: `test/<name>.test.ts`. Class names stay PascalCase.
+- **Relative imports end in `.js`**, as in `from './element-state.js'`, even though the files are `.ts`. `NodeNext`
   requires it, and without it the published `.d.ts` files break for consumers using `node16`/`nodenext`. Jest maps the
   imports back to `.ts`.
 - Type-only symbols use `import type` / `export type`. `isolatedModules` requires this and ESLint enforces it.

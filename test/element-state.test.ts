@@ -1,4 +1,5 @@
-import { ElementState, ElementStateData } from '../src/ElementState';
+import { ElementState } from '../src/element-state.js';
+import type { ElementStateData } from '../src/element-state.js';
 
 describe('ElementState', () => {
   // Constructor Tests

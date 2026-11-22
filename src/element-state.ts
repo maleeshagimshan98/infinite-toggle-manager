@@ -8,6 +8,17 @@ interface ElementStateData {
   isAlwaysActive?: boolean;
 }
 
+/**
+ * Type guard for ElementStateData - checks that the given data is a non-null object with a string name.
+ * The optional value and isAlwaysActive fields are validated by the ElementState constructor.
+ *
+ * @param {unknown} data data to check
+ * @returns {boolean} true if data has the shape of ElementStateData
+ */
+function isElementStateData(data: unknown): data is ElementStateData {
+  return typeof data === 'object' && data !== null && 'name' in data && typeof data.name === 'string';
+}
+
 class ElementState {
   /**
    * name
@@ -34,7 +45,7 @@ class ElementState {
    * constructor
    *
    * @param {ElementStateData} data
-   * @returns {ElementState}
+   * @throws {Error} if the name is empty, the value is invalid, or isAlwaysActive is true while value is false
    */
   constructor({ name, value, isAlwaysActive }: ElementStateData) {
     if (!name || typeof name !== 'string') {
@@ -145,4 +156,5 @@ class ElementState {
   }
 }
 
-export { ElementState, ElementStateData };
+export { ElementState, isElementStateData };
+export type { ElementStateData };
