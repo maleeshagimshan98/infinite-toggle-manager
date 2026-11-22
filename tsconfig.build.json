@@ -1,0 +1,14 @@
+{
+  // Emits the published type declarations only (dist/types). Vite builds the JavaScript.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "src",
+    "declarationDir": "dist/types",
+    "types": []
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "test"]
+}

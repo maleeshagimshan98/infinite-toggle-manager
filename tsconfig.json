@@ -1,41 +1,36 @@
 {
+  // Base config: editor support, `npm run typecheck`, ts-jest and type-aware ESLint.
+  // It never emits. Declarations come from tsconfig.build.json; JavaScript comes from Vite.
   "compilerOptions": {
-    /* 💡 Output & Language Features */
-    "target": "ESNext" /* Use the latest ECMAScript features */,
-    "module": "CommonJS" /* Use CommonJS modules (for Node.js) */,
-    "moduleResolution": "node" /* Use Node.js module resolution */,
-    "rootDir": "src" /* Set 'src' as the root directory */,
-    "outDir": "dist" /* Output compiled files to 'dist' */,
-    "allowJs": false /* Don't allow JavaScript files in the project */,
-    "resolveJsonModule": true /* Allow importing JSON files */,
-    "declaration": true /* Generate type definitions */,
+    /* Language & environment: a frontend library consumed by bundlers and modern browsers.
+       NodeNext is the strictest resolution mode: code that passes here also works in bundlers, and it forces
+       explicit `.js` extensions on relative imports so the emitted .d.ts files resolve for every consumer. */
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "moduleDetection": "force",
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowJs": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["jest"],
 
-    /* 💡 Strict Type Checking */
-    "strict": true /* Enable all strict type checking */,
-    "noImplicitAny": true /* Disallow implicit 'any' types */,
-    "strictNullChecks": true /* Check for 'null' and 'undefined' */,
-    "strictFunctionTypes": true /* Check function type assignments */,
-    "strictBindCallApply": true /* Check 'bind', 'call', 'apply' methods */,
-    "noImplicitThis": true /* Disallow 'this' being implicitly 'any' */,
-    "useUnknownInCatchVariables": true /* Use 'unknown' instead of 'any' in catch */,
-    "noImplicitReturns": true /* Ensure functions always return a value */,
-    "noFallthroughCasesInSwitch": true /* Disallow fallthrough in switch statements */,
+    /* Type safety */
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": true,
+    "useUnknownInCatchVariables": true,
 
-    /* 💡 Module Interop */
-    "esModuleInterop": true /* Improve compatibility with CommonJS */,
-    "allowSyntheticDefaultImports": true /* Allow default imports from non-ES modules */,
-    "forceConsistentCasingInFileNames": true /* Enforce case-sensitive imports */,
-
-    /* 💡 Linting & Formatting */
-    "skipLibCheck": true /* Skip type checking for dependencies */,
-    "noUnusedLocals": false /* Warn about unused local variables */,
-    "noUnusedParameters": true /* Warn about unused function parameters */,
-    "exactOptionalPropertyTypes": true /* Enforce strict optional properties */,
-    "noUncheckedIndexedAccess": true /* Ensure array/indexed types include 'undefined' */,
-
-    /* 💡 Compilation Settings */
-    "noEmit": false /* Don't output compiled files (useful for linting) */
+    "noEmit": true
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "build"]
+  "include": ["src", "test", "vite.config.ts"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -38,7 +38,7 @@ Perfect for tabs, modals, menus, or any interactive UI!
   - [isAlwaysActive(): boolean](#isalwayson-boolean)
   - [setIsAlwaysActive(value: boolean)](#setisalwaysactive-1)
   - [Example](#example-1)
-- [ElementError](#elementerror)
+- [ElementControllerError](#elementcontrollererror)
   - [Error Types](#error-types)
   - [Example](#example-2)
 
@@ -152,9 +152,9 @@ Sets the `isAlwaysActive` property. If set to `true`, the element is automatical
 
 ---
 
-## ElementError
+## ElementControllerError
 
-The `ElementError` class is used to handle specific error scenarios in `ElementStateController` and `ElementState`. It provides predefined error messages for common issues.
+The `ElementControllerError` class is thrown by `ElementStateController` for unknown element names, duplicate names and violations of the single-active rule. It provides predefined error messages for these cases. `ElementState` never throws it. Its input validation throws a plain `Error`.
 
 ### Error Types
 
