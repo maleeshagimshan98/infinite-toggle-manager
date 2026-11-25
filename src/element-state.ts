@@ -2,10 +2,23 @@
  * Copyright - 2025 - Maleesha Gimshan (www.github.com/maleeshagimshan98)
  */
 
+import { ElementStateError } from './error/element-state.error.js';
+
 interface ElementStateData {
   name: string;
   value?: boolean;
   isAlwaysActive?: boolean;
+}
+
+/**
+ * Type guard for ElementStateData - checks that the given data is a non-null object with a string name.
+ * The optional value and isAlwaysActive fields are validated by the ElementState constructor.
+ *
+ * @param {unknown} data data to check
+ * @returns {boolean} true if data has the shape of ElementStateData
+ */
+function isElementStateData(data: unknown): data is ElementStateData {
+  return typeof data === 'object' && data !== null && 'name' in data && typeof data.name === 'string';
 }
 
 class ElementState {
@@ -34,20 +47,20 @@ class ElementState {
    * constructor
    *
    * @param {ElementStateData} data
-   * @returns {ElementState}
+   * @throws {ElementStateError} if the name is empty, the value is invalid, or isAlwaysActive is true while value is false
    */
   constructor({ name, value, isAlwaysActive }: ElementStateData) {
     if (!name || typeof name !== 'string') {
-      throw new Error(`ElementState: An ElementState must have a name`);
+      throw ElementStateError.invalidName();
     }
     this._name = name;
     if (value && typeof value !== 'boolean') {
-      throw new Error(`ElementState: Invalid value type for value`);
+      throw ElementStateError.invalidValue();
     }
     this._isAlwaysActive = isAlwaysActive ?? false;
 
     if ((this, this._isAlwaysActive && !value)) {
-      throw new Error(`ElementState: the element value cannot be false when isAlwaysActive is set to true in ${name}`);
+      throw ElementStateError.alwaysActiveRequiresActiveValue(name);
     }
     this._value = value ?? false;
 
@@ -79,11 +92,11 @@ class ElementState {
    * change the state to inactive
    *
    * @returns {void} void
+   * @throws {ElementStateError} if the state is always active
    */
   inactive(): void {
     if (this._isAlwaysActive) {
-      console.warn(`Cannot turn off the an always active state - ${this._name}`);
-      return;
+      throw ElementStateError.cannotInactiveAlwaysActive(this._name);
     }
     this._value = false;
   }
@@ -92,11 +105,11 @@ class ElementState {
    * toggle the elements status
    *
    * @returns {void} void
+   * @throws {ElementStateError} if the state is always active
    */
   toggle(): void {
     if (this._isAlwaysActive) {
-      console.warn(`Trying to toggle the state of an always active state - ${this._name}`);
-      return;
+      throw ElementStateError.cannotToggleAlwaysActive(this._name);
     }
     if (this._value === true) {
       this._value = false;
@@ -128,13 +141,11 @@ class ElementState {
    *
    * @param {boolean} value
    * @returns {void}
-   * @throws {Error}
+   * @throws {ElementStateError} if the value is not a boolean
    */
   setIsAlwaysActive(value: boolean): void {
     if (typeof value !== 'boolean') {
-      throw new Error(
-        `Trying to set the isAlwaysActive in ${this._name}. The value must be a boolean, but found ${typeof value}`,
-      );
+      throw ElementStateError.invalidAlwaysActiveValue(this._name, typeof value);
     }
     this._isAlwaysActive = value;
     if (value) {
@@ -145,4 +156,5 @@ class ElementState {
   }
 }
 
-export { ElementState, ElementStateData };
+export { ElementState, isElementStateData };
+export type { ElementStateData };

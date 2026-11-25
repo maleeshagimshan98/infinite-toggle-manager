@@ -2,17 +2,17 @@
  * Copyright - 2025 - Maleesha Gimshan (www.github.com/maleeshagimshan98)
  */
 
-import { ElementState } from './ElementState';
-import type { ElementStateData } from './ElementState';
-import { ElementError, ElementErrorType } from './Error/ElementError';
+import { ElementState, isElementStateData } from './element-state.js';
+import type { ElementStateData } from './element-state.js';
+import { InfiniteToggleManagerError } from './error/infinite-toggle-manager.error.js';
 
-interface ElementStateControllerOptions {
+interface ToggleManagerOptions {
   activeAll?: boolean;
   inactiveAll?: boolean;
   multiple?: boolean;
 }
 
-class ElementStateController {
+class InfiniteToggleManager {
   /**
    * contains the ElementStates
    */
@@ -31,19 +31,23 @@ class ElementStateController {
   /**
    * constructor
    *
-   * @param {object} elements names of elements
-   * @returns {void} ElementStateController
-   * @throws {Error}
+   * @param {Record<string, ElementState | ElementStateData>} elements states or state data, keyed by lookup name
+   * @param {ToggleManagerOptions} options controller options - pass `{}` for the defaults
+   * @param {boolean} [options.activeAll] activate every element after initialising (only applied when multiple is true)
+   * @param {boolean} [options.inactiveAll] deactivate every element after initialising, except always-active ones
+   * @param {boolean} [options.multiple=false] allow more than one element to be active at the same time
+   * @throws {InfiniteToggleManagerError} if activeAll and inactiveAll are both true, an element cannot be initialised,
+   * the elements break the single-active rule, or activeAll is true while multiple is false
    */
   constructor(
     elements: Record<string, ElementState | ElementStateData>,
-    { activeAll, inactiveAll, multiple }: ElementStateControllerOptions,
+    { activeAll, inactiveAll, multiple }: ToggleManagerOptions,
   ) {
     this._multiple = multiple ?? false;
     this._initElements(elements);
 
     if (activeAll && inactiveAll) {
-      throw new Error(`ElementStateController: activeAll and inactiveAll cannot be true at the same time`);
+      throw InfiniteToggleManagerError.conflictingOptions();
     }
 
     if (activeAll) {
@@ -58,7 +62,6 @@ class ElementStateController {
    *
    *
    * @returns {boolean}
-   * @throws {Error}
    */
   private _hasAllowedMultipleElements(): boolean {
     if (this._multiple) {
@@ -72,24 +75,23 @@ class ElementStateController {
   }
 
   /**
-   * Set isAnyActiveStateFound property
+   * Set isAnyActiveStateFound property - true if any of the element states is active, otherwise false
    *
-   * @param {boolean} value
    * @returns {void}
    */
-  private _setActiveStateFound(value: boolean): void {
-    this._isAnyActiveStateFound = value;
+  private _setActiveStateFound(): void {
+    this._isAnyActiveStateFound = Object.values(this._elements).some((elementState) => elementState.isActive());
   }
 
   /**
-   * Set isAnyActiveStateFound to true
+   * Set isAnyActiveStateFound to true if the given element state is active.
    *
    * @param {ElementState} elementState
    * @returns {void}
    */
   private _updateAnyActiveStateFound(elementState: ElementState): void {
     if (elementState.isActive()) {
-      this._setActiveStateFound(true);
+      this._isAnyActiveStateFound = true;
     }
   }
 
@@ -97,7 +99,7 @@ class ElementStateController {
    * Checks if the state's active status is contradicting with multiple active states rule
    *
    * @param {boolean} isStateActive element's active status
-   * @return {boolean}
+   * @returns {boolean}
    */
   private _contradictWithMultipleElementRule(isStateActive: boolean): boolean {
     return !this._hasAllowedMultipleElements() && this._isAnyActiveStateFound && isStateActive;
@@ -109,10 +111,11 @@ class ElementStateController {
    * @param {string} name element state name
    * @param {ElementState} elementState element state
    * @returns {void}
+   * @throws {InfiniteToggleManagerError} if the state is active while another one is active and multiple is false
    */
   private _setElement(name: string, elementState: ElementState): void {
     if (this._contradictWithMultipleElementRule(elementState.isActive())) {
-      throw new ElementError(ElementErrorType.ELEMENT_CONTRADICTS_MULTIPLE_STATE_RULE, name);
+      throw InfiniteToggleManagerError.contradictsMultipleStateRule(name);
     }
     this._elements[name] = elementState;
     this._updateAnyActiveStateFound(elementState);
@@ -123,36 +126,32 @@ class ElementStateController {
    *
    * @param {ElementStateData | ElementState} elementState element state
    * @returns {ElementState}
-   * @throws {Error}
+   * @throws {InfiniteToggleManagerError} if elementState is not ElementStateData
    */
   private _createElement(elementState: ElementStateData | ElementState): ElementState {
     if (elementState instanceof ElementState) {
       return elementState;
     }
-    if (Object.keys(elementState).length > 0) {
+    if (isElementStateData(elementState)) {
       return new ElementState(elementState);
     } else {
-      throw new Error(`ElementStateController: Cannot create the state with an empty object`);
+      throw InfiniteToggleManagerError.emptyElement();
     }
   }
 
   /**
    * initialise the elements passed into constructor
    *
-   * @param {object} elements
+   * @param {Record<string, ElementState | ElementStateData>} elements
    * @returns {void} void
-   * @throws {Error}
+   * @throws {InfiniteToggleManagerError} if an element is empty or invalid, or the elements break the single-active rule
    */
   private _initElements(elements: Record<string, ElementState | ElementStateData>): void {
     for (const element in elements) {
-      if (elements[element] instanceof ElementState) {
-        this._setElement(element, elements[element]);
-        continue;
-      }
-      if (elements[element] && Object.keys(elements[element]).length > 0) {
-        this._setElement(element, new ElementState(elements[element]));
+      if (elements[element]) {
+        this._setElement(element, this._createElement(elements[element]));
       } else {
-        throw new Error(`ElementStateController: Cannot initialise the states`);
+        throw InfiniteToggleManagerError.invalidInitialElement(typeof elements[element]);
       }
     }
   }
@@ -161,8 +160,7 @@ class ElementStateController {
    * check if the given element is available
    *
    * @param {string} name
-   * @returns {boolean} void
-   * @throws {Error}
+   * @returns {boolean} true if an element is set under the given name
    */
   private _hasElement(name: string): boolean {
     return Object.prototype.hasOwnProperty.call(this._elements, name) && this._elements[name] instanceof ElementState;
@@ -173,11 +171,11 @@ class ElementStateController {
    *
    * @param {string} name elementState name
    * @returns {ElementState}
-   * @throws {ElementError}
+   * @throws {InfiniteToggleManagerError}
    */
   getElement(name: string): ElementState {
     if (!this._hasElement(name)) {
-      throw new ElementError(ElementErrorType.ELEMENT_NOT_SET, name);
+      throw InfiniteToggleManagerError.elementNotSet(name);
     }
     return this._elements[name]!;
   }
@@ -185,18 +183,17 @@ class ElementStateController {
   /**
    * add a new element
    *
-   * @param {ElementState|ElementStateData} elementState
+   * @param {ElementState | ElementStateData} elementState
    * @returns {void} void
-   * @throws {Error}
+   * @throws {InfiniteToggleManagerError} if elementState is empty or invalid, the name already exists, or it contradicts
+   * the multiple active state rule
    */
   addElement(elementState: ElementState | ElementStateData): void {
-    if (!elementState || Object.keys(elementState).length == 0) {
-      throw new Error(
-        `ElementStateController: parameter elementState must be a valid object having a name property or an instance of ElementState`,
-      );
+    if (!(elementState instanceof ElementState) && !isElementStateData(elementState)) {
+      throw InfiniteToggleManagerError.invalidElement();
     }
     if (this._hasElement(elementState.name)) {
-      throw new ElementError(ElementErrorType.ELEMENT_ALREADY_EXIST, elementState.name);
+      throw InfiniteToggleManagerError.elementAlreadyExists(elementState.name);
     }
     const element = this._createElement(elementState);
     this._setElement(element.name, element);
@@ -206,18 +203,20 @@ class ElementStateController {
    * change the state of all the elements to active
    *
    * @returns {void} void
+   * @throws {InfiniteToggleManagerError} if multiple is false
    */
   activeAll(): void {
     if (!this._multiple) {
-      console.warn(
-        `ElementStateController: Cannot turn on all the elements - ElementStateController.multiple is set to ${this._multiple}`,
-      );
-      return;
+      throw InfiniteToggleManagerError.cannotActivateAll();
     }
     for (const element in this._elements) {
-      this._elements[element]?.active();
+      const elementState = this._elements[element];
+      if (!elementState) {
+        continue;
+      }
+      elementState.active();
+      this._updateAnyActiveStateFound(elementState);
     }
-    this._setActiveStateFound(true);
   }
 
   /**
@@ -227,12 +226,15 @@ class ElementStateController {
    */
   inactiveAll(): void {
     for (const element in this._elements) {
-      if (this._elements[element]) {
-        this._elements[element].inactive();
-        this._setActiveStateFound(false);
-        this._updateAnyActiveStateFound(this._elements[element]);
+      const elementState = this._elements[element];
+      if (!elementState) {
+        continue;
+      }
+      if (!elementState.isAlwaysActive()) {
+        elementState.inactive();
       }
     }
+    this._setActiveStateFound();
   }
 
   /**
@@ -240,17 +242,18 @@ class ElementStateController {
    *
    * @param {string} name
    * @returns {void} void
+   * @throws {InfiniteToggleManagerError} if the element is not set, or it contradicts the multiple active state rule
    */
   active(name: string): void {
     if (!this._hasElement(name)) {
-      throw new ElementError(ElementErrorType.ELEMENT_NOT_SET, name);
+      throw InfiniteToggleManagerError.elementNotSet(name);
     }
     if (this._contradictWithMultipleElementRule(true)) {
       //... cannot set the state to active - contradicts with multiple active state rule
-      throw new ElementError(ElementErrorType.ELEMENT_CONTRADICTS_MULTIPLE_STATE_RULE, name);
+      throw InfiniteToggleManagerError.contradictsMultipleStateRule(name);
     }
     this._elements[name]?.active();
-    this._setActiveStateFound(true);
+    this._setActiveStateFound();
   }
 
   /**
@@ -258,46 +261,53 @@ class ElementStateController {
    *
    * @param {string} name
    * @returns {void} void
+   * @throws {InfiniteToggleManagerError} if the element is not set
+   * @throws {ElementStateError} if the element is always active
    */
   inactive(name: string): void {
     if (!this._hasElement(name)) {
-      throw new ElementError(ElementErrorType.ELEMENT_NOT_SET, name);
+      throw InfiniteToggleManagerError.elementNotSet(name);
     }
     this._elements[name]?.inactive();
+    this._setActiveStateFound();
   }
 
   /**
-   * toggle the given element active or inactive
-   * and set rest of elements to inactive
+   * toggle the given element active or inactive.
+   * When multiple is false, turning an element on turns every other element off.
+   * An always active element is left unchanged, with a warning.
    *
    * @param {string} name
    * @returns {void} void
-   * @throws {Error}
+   * @throws {InfiniteToggleManagerError} if the element is not set, or another element is always active while multiple is false
    */
   toggle(name: string): void {
-    if (!this._hasElement(name)) {
-      throw new ElementError(ElementErrorType.ELEMENT_NOT_SET, name);
-    }
-    if (this._elements[name]?.isAlwaysActive()) {
+    const elementState = this.getElement(name);
+    if (elementState.isAlwaysActive()) {
       //... keep element active
       console.warn(`ElementStateController: Trying to toggle the state of an always on element - ${name}`);
       return;
     }
 
+    if (this._multiple || elementState.isActive()) {
+      elementState.toggle();
+      this._setActiveStateFound();
+      return;
+    }
+
+    //... single-active mode: an always active element cannot be turned off, so it blocks turning this one on
     for (const element in this._elements) {
-      const togglingElementState = this._elements[element];
-      if (togglingElementState) {
-        if (togglingElementState.isAlwaysActive()) {
-          //... keep element active
-          continue;
-        }
-        if (this._contradictWithMultipleElementRule(togglingElementState.isActive() ? false : true)) {
-          //... cannot toggle this state - contradicts with the multiple elements rule
-          throw new ElementError(ElementErrorType.ELEMENT_CONTRADICTS_MULTIPLE_STATE_RULE, element);
-        }
-        togglingElementState.toggle();
+      if (element !== name && this._elements[element]?.isAlwaysActive()) {
+        throw InfiniteToggleManagerError.contradictsMultipleStateRule(name);
       }
     }
+    for (const element in this._elements) {
+      if (element !== name) {
+        this._elements[element]?.inactive();
+      }
+    }
+    elementState.active();
+    this._setActiveStateFound();
   }
 
   /**
@@ -306,15 +316,15 @@ class ElementStateController {
    * @param {string} name element state name
    * @param {boolean} value value to set
    * @returns {void}
-   * @throws {ElementError}
+   * @throws {InfiniteToggleManagerError}
    */
   setIsAlwaysActive(name: string, value: boolean): void {
     if (!this._hasElement(name)) {
-      throw new ElementError(ElementErrorType.ELEMENT_NOT_SET, name);
+      throw InfiniteToggleManagerError.elementNotSet(name);
     }
 
     if (this._contradictWithMultipleElementRule(true)) {
-      throw new ElementError(ElementErrorType.ELEMENT_CONTRADICTS_MULTIPLE_STATE_RULE, name);
+      throw InfiniteToggleManagerError.contradictsMultipleStateRule(name);
     }
     if (value === false) {
       this._elements[name]?.setIsAlwaysActive(value);
@@ -332,7 +342,7 @@ class ElementStateController {
 
   /**
    *
-   * @param {boolean}
+   * @param {boolean} state true to allow multiple elements to be active at the same time
    * @returns {void}
    */
   setMultipleElementsAllowState(state: boolean): void {
@@ -348,4 +358,4 @@ class ElementStateController {
   }
 }
 
-export default ElementStateController;
+export default InfiniteToggleManager;

@@ -1,55 +1,70 @@
+// @ts-check
+import js from '@eslint/js';
+import { defineConfig } from 'eslint/config';
+import prettierRecommended from 'eslint-plugin-prettier/recommended';
 import globals from 'globals';
-import pluginJs from '@eslint/js';
 import tseslint from 'typescript-eslint';
-import prettier from 'eslint-config-prettier';
-import prettierPlugin from 'eslint-plugin-prettier';
 
-/** @type {import('eslint').Linter.Config[]} */
-export default [
+export default defineConfig(
+  // Global ignores (replacement for .eslintignore)
+  { ignores: ['dist/', 'coverage/', 'node_modules/'] },
+
+  // Every JS/TS file
   {
-    files: ['src/**/*.{js,ts}'],
-    ignores: ['node_modules', 'dist', 'build'],
+    files: ['**/*.{js,mjs,cjs,ts}'],
+    extends: [js.configs.recommended],
+  },
+
+  // TypeScript: type-aware rules, using the tsconfig.json that covers src/, test/ and vite.config.ts
+  {
+    files: ['**/*.ts'],
+    extends: [tseslint.configs.recommendedTypeChecked],
     languageOptions: {
-      globals: globals.node, // Enable Node.js global variables
-      parser: tseslint.parser,
       parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-        project: './tsconfig.json',
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
-    plugins: {
-      '@typescript-eslint': tseslint.plugin,
-      prettier: prettierPlugin,
-    },
     rules: {
-      /** ✅ TypeScript Rules */
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/explicit-function-return-type': 'error',
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/consistent-type-imports': 'error',
-
-      /** ✅ Prettier Rules */
-      'prettier/prettier': [
-        'error',
-        {
-          endOfLine: 'lf', // Ensure LF (Line Feed) is used
-          semi: true, // Require semicolons
-          singleQuote: true, // Use single quotes
-          trailingComma: 'all', // Use trailing commas
-          printWidth: 120, // Wrap lines at 80 characters
-          tabWidth: 2, // Indent with 2 spaces
-        },
-      ],
-
-      /** ✅ Node.js & General JS Rules */
-      'eol-last': ['error', 'always'], // Ensure LF at the end of files
-      'linebreak-style': ['error', 'unix'], // Enforce LF (Unix-style EOL)
-      'no-console': 'warn', // Warn on console.log usage
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/explicit-member-accessibility': ['error', { accessibility: 'no-public' }],
+      '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'separate-type-imports' }],
+      '@typescript-eslint/consistent-type-exports': 'error',
+      '@typescript-eslint/no-import-type-side-effects': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/switch-exhaustiveness-check': 'error',
+      eqeqeq: ['error', 'always'],
     },
   },
-  pluginJs.configs.recommended,
-  ...tseslint.configs.recommended,
-  prettier, // Disable conflicting ESLint rules that Prettier handles
-];
+
+  // Library source: runs in browsers; console.warn/error are part of the public behavior
+  {
+    files: ['src/**/*.ts'],
+    languageOptions: { globals: globals.browser },
+    rules: {
+      'no-console': ['error', { allow: ['warn', 'error'] }],
+    },
+  },
+
+  // Tests: Jest globals, and rules that fight common test patterns are relaxed
+  {
+    files: ['test/**/*.ts'],
+    languageOptions: { globals: globals.jest },
+    rules: {
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+    },
+  },
+
+  // Node-side JS config files (jest.config.js, eslint.config.mjs)
+  {
+    files: ['**/*.{js,mjs,cjs}'],
+    languageOptions: { globals: globals.node },
+  },
+
+  // Prettier last: reports formatting via prettier/prettier (options from .prettierrc.json)
+  // and turns off ESLint rules that conflict with it.
+  prettierRecommended,
+);

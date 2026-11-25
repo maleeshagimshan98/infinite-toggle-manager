@@ -1,0 +1,9 @@
+{
+  // Used by ts-jest only: same strictness as tsconfig.json, but tests are compiled to CommonJS for Jest.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node10"
+  },
+  "include": ["src", "test"]
+}
