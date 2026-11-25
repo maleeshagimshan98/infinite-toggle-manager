@@ -41,6 +41,7 @@ Perfect for tabs, modals, menus, or any interactive UI!
 - [ElementControllerError](#elementcontrollererror)
   - [Error Types](#error-types)
   - [Example](#example-2)
+- [ElementStateError](#elementstateerror)
 
 ---
 
@@ -82,7 +83,7 @@ Adds a new element to the controller. Throws an error if an element with the sam
 
 #### activeAll(): void
 
-Turns on all elements managed by the `ElementStateController`. Logs a warning if `multiple` is false.
+Turns on all elements managed by the `ElementStateController`. Throws an `ElementControllerError` if `multiple` is false.
 
 #### inactiveAll(): void
 
@@ -94,11 +95,11 @@ Activates a specific element by name. Throws an error if the element contradicts
 
 #### inactive(name: string): void
 
-Deactivates a specific element by name.
+Deactivates a specific element by name. Throws an `ElementStateError` if the element is marked as `isAlwaysActive`.
 
 #### toggle(name: string): void
 
-Toggles the state of a specific element by name. Logs a warning if the element is marked as `isAlwaysActive`. If `multiple` is false, toggling one element will deactivate others.
+Toggles the state of a specific element by name. Logs a warning and does nothing if the element is marked as `isAlwaysActive`. If `multiple` is false, turning an element on turns every other element off. In that case, if another element is marked as `isAlwaysActive`, it throws an `ElementControllerError` and changes nothing.
 
 #### setIsAlwaysActive(name: string, value: boolean): void
 
@@ -132,11 +133,11 @@ Activates the element.
 
 #### inactive(): void
 
-Deactivates the element. Logs a warning if the element is marked as `isAlwaysActive`.
+Deactivates the element. Throws an `ElementStateError` if the element is marked as `isAlwaysActive`.
 
 #### toggle(): void
 
-Toggles the state of the element. Logs a warning if the element is marked as `isAlwaysActive`.
+Toggles the state of the element. Throws an `ElementStateError` if the element is marked as `isAlwaysActive`.
 
 #### isActive(): boolean
 
@@ -148,13 +149,13 @@ Returns `true` if the element is marked as always active, otherwise `false`.
 
 #### setIsAlwaysActive(value: boolean): void
 
-Sets the `isAlwaysActive` property. If set to `true`, the element is automatically activated. Throws an error if the value is not a boolean.
+Sets the `isAlwaysActive` property. If set to `true`, the element is automatically activated. Throws an `ElementStateError` if the value is not a boolean.
 
 ---
 
 ## ElementControllerError
 
-The `ElementControllerError` class is thrown by `ElementStateController` for unknown element names, duplicate names and violations of the single-active rule. It provides predefined error messages for these cases. `ElementState` never throws it. Its input validation throws a plain `Error`.
+The `ElementControllerError` class is thrown by `ElementStateController` for every error it raises itself: unknown element names, duplicate names, violations of the single-active rule, `activeAll()` while `multiple` is false, conflicting options and invalid elements. It provides predefined error messages for these cases. `ElementState` never throws it.
 
 ### Error Types
 
@@ -163,6 +164,28 @@ The `ElementControllerError` class is thrown by `ElementStateController` for unk
 | `ELEMENT_NOT_SET`                         | Thrown when attempting to access an element that is not defined.    |
 | `ELEMENT_ALREADY_EXIST`                   | Thrown when attempting to add an element with a duplicate name.     |
 | `ELEMENT_CONTRADICTS_MULTIPLE_STATE_RULE` | Thrown when an operation violates the "multiple active state" rule. |
+| `CANNOT_ACTIVATE_ALL_WITHOUT_MULTIPLE`    | Thrown when `activeAll()` is called while `multiple` is false.      |
+| `CONFLICTING_OPTIONS`                     | Thrown when `activeAll` and `inactiveAll` are both true.            |
+| `INVALID_ELEMENT`                         | Thrown when an element is empty or not a valid element state.       |
+
+---
+
+## ElementStateError
+
+The `ElementStateError` class is thrown by `ElementState` for invalid input (a missing name, a non-boolean `value` or `isAlwaysActive`, or `isAlwaysActive: true` with `value: false`) and when `inactive()` or `toggle()` is called on an element marked as `isAlwaysActive`. Each error has a `type` property that identifies the case.
+
+```javascript
+import { ElementState, ElementStateError } from 'infinite-toggle-manager';
+
+const header = new ElementState({ name: 'header', value: true, isAlwaysActive: true });
+try {
+  header.inactive();
+} catch (error) {
+  if (error instanceof ElementStateError) {
+    console.log(error.message); // ElementState: Cannot turn off an always active state - header
+  }
+}
+```
 
 ---
 

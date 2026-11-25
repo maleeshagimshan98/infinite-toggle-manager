@@ -1,6 +1,7 @@
 import InfiniteToggleManager from '../src/infinite-toggle-manager.js';
 import { ElementState } from '../src/element-state.js';
 import type { ElementStateData } from '../src/element-state.js';
+import { InfiniteToggleManagerError, ToggleManagerErrorType } from '../src/error/infinite-toggle-manager.error.js';
 
 describe('ElementStateController', () => {
   // Constructor Tests
@@ -8,6 +9,27 @@ describe('ElementStateController', () => {
     expect(() => {
       new InfiniteToggleManager({}, { activeAll: true, inactiveAll: true });
     }).toThrow('ElementStateController: activeAll and inactiveAll cannot be true at the same time');
+  });
+
+  test('should throw InfiniteToggleManagerError with its type for invalid input', () => {
+    let caught: unknown;
+    try {
+      new InfiniteToggleManager({}, { activeAll: true, inactiveAll: true });
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(InfiniteToggleManagerError);
+    expect((caught as InfiniteToggleManagerError).type).toBe(ToggleManagerErrorType.CONFLICTING_OPTIONS);
+
+    expect(() => new InfiniteToggleManager({ element1: {} as unknown as ElementStateData }, {})).toThrow(
+      InfiniteToggleManagerError,
+    );
+    expect(() => new InfiniteToggleManager({ element1: undefined as unknown as ElementStateData }, {})).toThrow(
+      InfiniteToggleManagerError,
+    );
+    expect(() => new InfiniteToggleManager({}, {}).addElement({} as unknown as ElementStateData)).toThrow(
+      InfiniteToggleManagerError,
+    );
   });
 
   test('should initialize and activate all elements', () => {
@@ -21,24 +43,13 @@ describe('ElementStateController', () => {
   });
 
   test('should throw an error when trying to activate all elements if multiple is set to false', () => {
-    // Mock console.warn
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-
     const elements = {
       element1: { name: 'element1' },
       element2: { name: 'element2' },
     };
-
-    // Test the behavior
-    new InfiniteToggleManager(elements, { activeAll: true });
-
-    // Assert that console.warn was called with the expected message
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      'ElementStateController: Cannot turn on all the elements - ElementStateController.multiple is set to false',
+    expect(() => new InfiniteToggleManager(elements, { activeAll: true })).toThrow(
+      'InfiniteToggleManager - Cannot activate all elements while multiple is set to false.',
     );
-
-    // Restore the original console.warn
-    consoleWarnSpy.mockRestore();
   });
 
   test('should initialize and keep all elements inactive', () => {
@@ -141,15 +152,17 @@ describe('ElementStateController', () => {
     expect(controller.getElement('element2').isActive()).toBe(true);
   });
 
-  test('activeAll should not activate all elements if multiple is false', () => {
-    console.warn = jest.fn();
+  test('activeAll should throw and leave elements inactive if multiple is false', () => {
     const elements = {
       element1: new ElementState({ name: 'element1' }),
       element2: new ElementState({ name: 'element2' }),
     };
     const controller = new InfiniteToggleManager(elements, { multiple: false });
-    controller.activeAll();
-    expect(console.warn).toHaveBeenCalled();
+    expect(() => controller.activeAll()).toThrow(
+      'InfiniteToggleManager - Cannot activate all elements while multiple is set to false.',
+    );
+    expect(controller.getElement('element1').isActive()).toBe(false);
+    expect(controller.getElement('element2').isActive()).toBe(false);
   });
 
   // Method: inactiveAll
@@ -244,13 +257,15 @@ describe('ElementStateController', () => {
   });
 
   test('toggle should not toggle always active element', () => {
-    console.warn = jest.fn();
+    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const elements = {
       element1: new ElementState({ name: 'element1', value: true, isAlwaysActive: true }),
     };
     const controller = new InfiniteToggleManager(elements, {});
     controller.toggle('element1');
-    expect(console.warn).toHaveBeenCalled();
+    expect(consoleWarnSpy).toHaveBeenCalled();
+    expect(controller.getElement('element1').isActive()).toBe(true);
+    consoleWarnSpy.mockRestore();
   });
 
   test('toggle should throw error if element does not exist', () => {
@@ -258,6 +273,93 @@ describe('ElementStateController', () => {
     expect(() => {
       controller.toggle('nonExistent');
     }).toThrow('InfiniteToggleManager - Element with the name nonExistent is not defined in ElementStateController');
+  });
+
+  test('toggle should deactivate an active element and leave every element inactive when multiple is false', () => {
+    const controller = new InfiniteToggleManager(
+      { element1: { name: 'element1', value: true }, element2: { name: 'element2' } },
+      { multiple: false },
+    );
+    controller.toggle('element1');
+    expect(controller.getElement('element1').isActive()).toBe(false);
+    expect(controller.getElement('element2').isActive()).toBe(false);
+    expect(controller.hasAnyActiveStateFound()).toBe(false);
+  });
+
+  test('toggle should activate only the given element when multiple is false', () => {
+    const controller = new InfiniteToggleManager(
+      { element1: { name: 'element1' }, element2: { name: 'element2' } },
+      { multiple: false },
+    );
+    controller.toggle('element1');
+    expect(controller.getElement('element1').isActive()).toBe(true);
+    expect(controller.getElement('element2').isActive()).toBe(false);
+    expect(controller.hasAnyActiveStateFound()).toBe(true);
+  });
+
+  test('toggle should deactivate the rest when activating an element and multiple is false', () => {
+    const controller = new InfiniteToggleManager(
+      {
+        element1: { name: 'element1', value: true },
+        element2: { name: 'element2' },
+        element3: { name: 'element3' },
+      },
+      { multiple: false },
+    );
+    controller.toggle('element2');
+    expect(controller.getElement('element1').isActive()).toBe(false);
+    expect(controller.getElement('element2').isActive()).toBe(true);
+    expect(controller.getElement('element3').isActive()).toBe(false);
+  });
+
+  test('toggle should throw and change nothing when an always active element blocks it and multiple is false', () => {
+    const controller = new InfiniteToggleManager(
+      { element1: { name: 'element1', value: true, isAlwaysActive: true }, element2: { name: 'element2' } },
+      { multiple: false },
+    );
+    expect(() => controller.toggle('element2')).toThrow(
+      'InfiniteToggleManager - An element with name element2 contradicts with multiple active state rule.',
+    );
+    expect(controller.getElement('element1').isActive()).toBe(true);
+    expect(controller.getElement('element2').isActive()).toBe(false);
+  });
+
+  test('toggle should only flip the given element when multiple is true', () => {
+    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const controller = new InfiniteToggleManager(
+      {
+        element1: { name: 'element1', value: true, isAlwaysActive: true },
+        element2: { name: 'element2', value: true },
+        element3: { name: 'element3' },
+      },
+      { multiple: true },
+    );
+    controller.toggle('element3');
+    expect(controller.getElement('element1').isActive()).toBe(true);
+    expect(controller.getElement('element2').isActive()).toBe(true);
+    expect(controller.getElement('element3').isActive()).toBe(true);
+
+    controller.toggle('element2');
+    expect(controller.getElement('element1').isActive()).toBe(true);
+    expect(controller.getElement('element2').isActive()).toBe(false);
+    expect(controller.getElement('element3').isActive()).toBe(true);
+
+    controller.toggle('element1');
+    expect(consoleWarnSpy).toHaveBeenCalled();
+    expect(controller.getElement('element1').isActive()).toBe(true);
+    consoleWarnSpy.mockRestore();
+  });
+
+  test('toggle should clear the active state flag so another element can be activated', () => {
+    const controller = new InfiniteToggleManager(
+      { element1: { name: 'element1' }, element2: { name: 'element2' } },
+      { multiple: false },
+    );
+    controller.toggle('element1');
+    controller.toggle('element1');
+    expect(controller.hasAnyActiveStateFound()).toBe(false);
+    controller.active('element2');
+    expect(controller.getElement('element2').isActive()).toBe(true);
   });
 
   test('should handle a large number of elements efficiently', () => {

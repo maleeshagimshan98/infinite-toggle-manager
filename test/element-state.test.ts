@@ -1,5 +1,6 @@
 import { ElementState } from '../src/element-state.js';
 import type { ElementStateData } from '../src/element-state.js';
+import { ElementStateError, ElementStateErrorType } from '../src/error/element-state.error.js';
 
 describe('ElementState', () => {
   // Constructor Tests
@@ -42,6 +43,23 @@ describe('ElementState', () => {
     );
   });
 
+  test('should throw ElementStateError with its type for invalid input', () => {
+    let caught: unknown;
+    try {
+      new ElementState({ name: '' });
+    } catch (error) {
+      caught = error;
+    }
+    expect(caught).toBeInstanceOf(ElementStateError);
+    expect((caught as ElementStateError).type).toBe(ElementStateErrorType.INVALID_NAME);
+
+    expect(() => new ElementState({ name: 'test', value: 'invalid' as unknown as boolean })).toThrow(ElementStateError);
+    expect(() => new ElementState({ name: 'test', value: false, isAlwaysActive: true })).toThrow(ElementStateError);
+    expect(() => new ElementState({ name: 'test' }).setIsAlwaysActive('' as unknown as boolean)).toThrow(
+      ElementStateError,
+    );
+  });
+
   // Method: active
   test('should activate the state', () => {
     const element = new ElementState({ name: 'activateTest' });
@@ -56,11 +74,9 @@ describe('ElementState', () => {
     expect(element.isActive()).toBe(false);
   });
 
-  test('should not deactivate an always active state', () => {
-    console.warn = jest.fn();
+  test('should throw when deactivating an always active state', () => {
     const element = new ElementState({ name: 'alwaysActiveTest', value: true, isAlwaysActive: true });
-    element.inactive();
-    expect(console.warn).toHaveBeenCalledWith('Cannot turn off the an always active state - alwaysActiveTest');
+    expect(() => element.inactive()).toThrow('ElementState: Cannot turn off an always active state - alwaysActiveTest');
     expect(element.isActive()).toBe(true);
   });
 
@@ -73,12 +89,10 @@ describe('ElementState', () => {
     expect(element.isActive()).toBe(true);
   });
 
-  test('should not toggle an always active state', () => {
-    console.warn = jest.fn();
+  test('should throw when toggling an always active state', () => {
     const element = new ElementState({ name: 'alwaysActiveToggleTest', value: true, isAlwaysActive: true });
-    element.toggle();
-    expect(console.warn).toHaveBeenCalledWith(
-      'Trying to toggle the state of an always active state - alwaysActiveToggleTest',
+    expect(() => element.toggle()).toThrow(
+      'ElementState: Cannot toggle an always active state - alwaysActiveToggleTest',
     );
     expect(element.isActive()).toBe(true);
   });
@@ -118,9 +132,9 @@ describe('ElementState', () => {
 
   test('should not allow invalid state transitions', () => {
     const element = new ElementState({ name: 'invalidTransitionTest', value: true, isAlwaysActive: true });
-    element.inactive();
+    expect(() => element.inactive()).toThrow(ElementStateError);
     expect(element.isActive()).toBe(true);
-    element.toggle();
+    expect(() => element.toggle()).toThrow(ElementStateError);
     expect(element.isActive()).toBe(true);
   });
 

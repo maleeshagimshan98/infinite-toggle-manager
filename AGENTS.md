@@ -21,7 +21,7 @@ Guidance for AI coding agents and contributors working in this repository.
 | Task      | Command                                                 | Notes                                                                             |
 | --------- | ------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | Install   | `npm ci`                                                | Installs exactly what `package-lock.json` pins                                    |
-| Test      | `npm test`                                              | Jest 29 + ts-jest (compiled through `tsconfig.test.json`); 50 tests               |
+| Test      | `npm test`                                              | Jest 29 + ts-jest (compiled through `tsconfig.test.json`); 58 tests               |
 | One file  | `npx jest test/element-state.test.ts`                   |                                                                                   |
 | One test  | `npx jest -t "toggle should toggle a specific element"` |                                                                                   |
 | Typecheck | `npm run typecheck`                                     | `tsc -p tsconfig.json`: `src/`, `test/` and `vite.config.ts`; emits nothing       |
@@ -40,12 +40,14 @@ Guidance for AI coding agents and contributors working in this repository.
 ```
 src/
   index.ts                    public entry. Named exports: ElementStateController (InfiniteToggleManager),
-                              ElementState, ElementStateData (type), ElementControllerError (InfiniteToggleManagerError).
-                              ToggleManagerErrorType is NOT exported here.
+                              ElementState, ElementStateData (type), ElementControllerError (InfiniteToggleManagerError),
+                              ElementStateError. The error type enums are NOT exported here.
   element-state.ts            one element's state; exports ElementState, isElementStateData, ElementStateData (type)
   infinite-toggle-manager.ts  InfiniteToggleManager: manages a named group of states; DEFAULT export
   error/infinite-toggle-manager.error.ts
                               InfiniteToggleManagerError class + ToggleManagerErrorType enum
+  error/element-state.error.ts
+                              ElementStateError class + ElementStateErrorType enum
 test/
   element-state.test.ts            ts-jest; tests import from ../src/*.js
   infinite-toggle-manager.test.ts
@@ -73,7 +75,7 @@ Config files:
   - `isAlwaysActive: true` requires `value: true`, otherwise it throws.
 - Methods: `active()`, `inactive()`, `toggle()`, `isActive()`, `isAlwaysActive()`, a `name` getter, and
   `setIsAlwaysActive(bool)`. Passing `true` also activates the state; passing `false` clears the flag, then deactivates.
-- On an always-active state, `inactive()` and `toggle()` call `console.warn` and do nothing. They do not throw.
+- On an always-active state, `inactive()` and `toggle()` throw `ElementStateError` and change nothing.
 
 ### ElementStateController (`InfiniteToggleManager`)
 
@@ -84,13 +86,17 @@ Config files:
     defaults. Setting `activeAll` and `inactiveAll` together throws.
 - **Single-active rule:** when `multiple` is `false` (the default), the controller tracks `_isAnyActiveStateFound`. Any
   operation that would make another element active throws `ElementControllerError` (`ELEMENT_CONTRADICTS_MULTIPLE_STATE_RULE`).
-  It never auto-deactivates the other elements.
+  The only exception is `toggle(name)`, which turns the other elements off (see below).
 - Public methods:
   - `getElement(name)`
   - `addElement(stateOrData)` takes a single argument and stores it under `.name`. A duplicate name throws
     `ELEMENT_ALREADY_EXIST`.
-  - `active(name)`, `inactive(name)`, `toggle(name)`
-  - `activeAll()` warns and does nothing unless `multiple` is true.
+  - `active(name)`, `inactive(name)`. `inactive(name)` on an always-active element throws `ElementStateError`.
+  - `toggle(name)` flips only `name`. With `multiple: false`, turning `name` on first turns every other element off. If
+    another element is always-active, it throws `ELEMENT_CONTRADICTS_MULTIPLE_STATE_RULE` and changes nothing. On an
+    always-active `name`, it calls `console.warn` and does nothing.
+  - `activeAll()` throws `CANNOT_ACTIVATE_ALL_WITHOUT_MULTIPLE` unless `multiple` is true, including when called from
+    the constructor through `{ activeAll: true }`.
   - `inactiveAll()` leaves always-active elements active.
   - `setIsAlwaysActive(name, value)`
   - `hasAllowMultipleElements()`, `setMultipleElementsAllowState(bool)`, `hasAnyActiveStateFound()`
@@ -98,11 +104,17 @@ Config files:
 
 ### Errors
 
-- Input validation throws a plain `Error` prefixed with the public class name: `ElementState: …`,
-  `ElementStateController: …`.
-- Lookups, duplicates and single-active rule violations throw `InfiniteToggleManagerError` (public name
-  `ElementControllerError`). Its message starts with `InfiniteToggleManager - ` and `.type` is a numeric
-  `ToggleManagerErrorType`.
+- `ElementState` throws `ElementStateError` (exported under that name) for invalid input, and for `inactive()` /
+  `toggle()` on an always-active state. Most messages start with `ElementState: `, and `.type` is a numeric
+  `ElementStateErrorType`.
+- Every error the controller raises itself is an `InfiniteToggleManagerError` (public name `ElementControllerError`), and
+  `.type` is a numeric `ToggleManagerErrorType`. That covers lookups, duplicates, single-active rule violations,
+  `activeAll()` without `multiple`, conflicting options (`CONFLICTING_OPTIONS`) and invalid elements
+  (`INVALID_ELEMENT`). Rule and lookup messages start with `InfiniteToggleManager - `. Input validation messages keep
+  their older `ElementStateController: …` prefix. Don't throw a plain `Error` in `infinite-toggle-manager.ts`.
+- Both error classes are built through static factory methods, such as `InfiniteToggleManagerError.elementNotSet(name)`
+  and `ElementStateError.invalidName()`, not with `new`. When you add an error type, add a factory for it and append
+  the enum member at the end, so existing `.type` values don't shift.
 - Tests assert exact message strings. If you change a message, update the tests in the same change.
 
 ## Known bugs (verified on `master`)
@@ -113,16 +125,13 @@ with tests.
 1. `inactive(name)` doesn't clear the active-state flag. With `multiple: false`, after `active('a'); inactive('a')`, a
    call to `active('b')` throws.
 2. With `multiple: false`, calling `active(name)` on the element that is already active throws.
-3. `toggle(name)` flips **every** non-always-active element, not just `name`. With `multiple: false` and two inactive
-   elements, `toggle('a')` leaves both active, despite what the README and JSDoc say. `docs/TODO` lists `toggle()` as
-   not yet updating the flag.
-4. `inactiveAll()` sets the flag from the last element only. An always-active element earlier in the map stays active
+3. `inactiveAll()` sets the flag from the last element only. An always-active element earlier in the map stays active
    while `hasAnyActiveStateFound()` returns `false`.
-5. `ElementStateController.setIsAlwaysActive(name, true)` is ignored (only `false` is applied), and its rule check
+4. `ElementStateController.setIsAlwaysActive(name, true)` is ignored (only `false` is applied), and its rule check
    throws even when the value is `false`.
-6. The constructor stores elements under the record key, but `addElement` uses `.name`. If the key and name differ, the
+5. The constructor stores elements under the record key, but `addElement` uses `.name`. If the key and name differ, the
    element can't be looked up by its own name.
-7. `ElementState` value validation only rejects truthy non-booleans, so `0` and `''` are accepted.
+6. `ElementState` value validation only rejects truthy non-booleans, so `0` and `''` are accepted.
 
 Minor issues:
 
@@ -153,8 +162,8 @@ Minor issues:
   enforced by the `prettier/prettier` lint rule and `.editorconfig`.
 - One class per file, `private _camelCase` fields, and a JSDoc block (`@param`, `@returns`, `@throws`) on every method.
   Source files start with the header `Copyright - 2025 - Maleesha Gimshan (www.github.com/maleeshagimshan98)`.
-- In `src/`, only `console.warn` / `console.error` are allowed. No-ops on an always-active state warn by design, and
-  any other `console` call is a lint error.
+- In `src/`, only `console.warn` / `console.error` are allowed, and any other `console` call is a lint error. The one
+  intentional warning is `ElementStateController.toggle()` on an always-active element.
 - Tests use one `describe` per class, with names like `test('should …')` or `test('<method> should …')`. Assert through
   the public API (`isActive()`, `getElement()`). Mock `console.warn` with `jest.spyOn(console, 'warn')` and restore it
   afterwards.
