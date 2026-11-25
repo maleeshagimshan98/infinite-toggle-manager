@@ -29,8 +29,8 @@ source files.
 5. **`exports` is the source of truth.** Within the `.` entry, `types` comes **first** (TypeScript requires this), then
    `import`, then `require`. Keep `"./package.json"` exported for tooling. Any path you add here has to exist after
    `npm run build`.
-6. **`files` is `["dist"]`.** Only build output is published (npm always adds `package.json` and `README.md`). Don't add
-   `src` or `test`.
+6. **`files` is `["dist"]`.** Only build output is published (npm always adds `package.json`, `README.md` and
+   `LICENSE`). Don't add `src` or `test`.
 7. **`sideEffects: false`.** Importing the package has no side effects, so bundlers can tree-shake unused exports. If
    you ever add module-level side effects (polyfills, CSS), change this.
 8. **`directories` is informational.** npm doesn't use `directories.test` for anything. Don't rely on it for publishing
@@ -103,7 +103,7 @@ automatically):
 
 1. `npm run lint && npm run typecheck && npm test`
 2. `npm run build`. Expect `dist/index.js`, `dist/index.cjs`, their `.map` files, and `dist/types/**/*.d.ts`.
-3. `npm pack --dry-run`. The tarball must contain only `dist/**`, `package.json` and `README.md`.
+3. `npm pack --dry-run`. The tarball must contain only `dist/**`, `package.json`, `README.md` and `LICENSE`.
 4. Consumer smoke test: install the packed `.tgz` into a scratch project, then confirm that
    - `require('infinite-toggle-manager')` and `import … from 'infinite-toggle-manager'` both work at runtime;
    - a TypeScript file importing the package type-checks under `moduleResolution` `bundler` and `nodenext`.

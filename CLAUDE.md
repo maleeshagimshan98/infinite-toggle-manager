@@ -27,7 +27,7 @@ This file guides Claude Code when it works in this repository.
   lint.
 - Before changing anything listed under Known bugs, or any error message, confirm with the user. Then update the
   affected tests in the same change.
-- When you edit the README, match it to the actual API in `src/`. Parts of the README are out of date.
+- When you change the public API in `src/`, update the README to match, and check its examples still run.
 - Verification loop after a change: `npm run lint`, then `npm run typecheck`, then `npm test`. After build, config or
   `package.json` changes, also run "Verifying the build" from [docs/library-rules.md](docs/library-rules.md). Pack and
   test consumers in the scratchpad, never inside the repo.
@@ -45,7 +45,7 @@ This file guides Claude Code when it works in this repository.
 | Format    | `npm run format` / `npm run format:check`               | Whole repo; `format` rewrites files                                               |
 | Build     | `npm run build`                                         | `vite build && tsc -p tsconfig.build.json`; writes only to `dist/`                |
 
-`npm run format:check` currently flags `README.md`, which was already unformatted.
+`npm run format:check` currently flags `package.json` and `docs/todo.yaml`, which were already unformatted.
 
 ## Layout
 
@@ -149,8 +149,6 @@ Minor issues:
 
 - `ToggleManagerErrorType` isn't exported from `src/index.ts`.
 - There's a stray comma expression `(this, …)` in the `ElementState` constructor.
-- The README has broken anchors and the old `addElement(name, …)` signature.
-- The README links to a `LICENSE` file that doesn't exist.
 
 ## Code conventions
 

@@ -32,7 +32,8 @@ Guidance for AI coding agents and contributors working in this repository.
 - Before finishing a change, run `npm run lint`, `npm run typecheck` and `npm test`. If you touched the build,
   `package.json` or any config file, also follow "Verifying the build" in
   [docs/library-rules.md](docs/library-rules.md).
-- `npm run format:check` currently flags `README.md`, which was already unformatted. Format only the files you changed
+- `npm run format:check` currently flags `package.json` and `docs/todo.yaml`, which were already unformatted. Format
+  only the files you changed
   (`npx prettier --write <files>`) unless reformatting the repo is the task.
 
 ## Layout
@@ -137,8 +138,6 @@ Minor issues:
 
 - `ToggleManagerErrorType` isn't exported from `src/index.ts`.
 - There's a stray comma expression `(this, …)` in the `ElementState` constructor.
-- The README has broken anchors and the old `addElement(name, …)` signature.
-- The README links to a `LICENSE` file that doesn't exist.
 
 ## Code conventions
 
