@@ -1,0 +1,10 @@
+update all vite, ESLint, tsConfig files to align with vite and typescript - Create a .md file with rules, in the docs folder
+  vite config
+    - remove vue related code
+  ESLint config
+    - write/refine ESLint rules for typescript
+  TSConfig
+    - align the typscript rules for frontend library
+Check where the main, prop is pointed, types, files property, Directories property in package.json - add a rule in .md file
+  - this is a library, so the main property should point to the dist folder, and the types property should point to the types folder
+Test the build step

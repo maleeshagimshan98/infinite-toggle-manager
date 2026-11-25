@@ -1,6 +1,6 @@
 {
   "name": "infinite-toggle-manager",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Are you tired of dealing with messy code when managing active state in your components? Say goodbye to complexity and embrace the simplicity of ElementStateController!",
   "type": "module",
   "main": "./dist/index.cjs",

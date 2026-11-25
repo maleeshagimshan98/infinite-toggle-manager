@@ -108,7 +108,7 @@ automatically):
    - `require('infinite-toggle-manager')` and `import … from 'infinite-toggle-manager'` both work at runtime;
    - a TypeScript file importing the package type-checks under `moduleResolution` `bundler` and `nodenext`.
 
-### Supported consumers (verified with v1.2.0)
+### Supported consumers (verified with v2.0.0)
 
 | Consumer                                        | Status                                                         |
 | ----------------------------------------------- | -------------------------------------------------------------- |

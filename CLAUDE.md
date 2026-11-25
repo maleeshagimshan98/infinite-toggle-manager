@@ -4,7 +4,7 @@ This file guides Claude Code when it works in this repository.
 
 ## Project
 
-- npm package **`infinite-toggle-manager`** (v1.2.0): a small TypeScript library for tracking the active/inactive state
+- npm package **`infinite-toggle-manager`** (v2.0.0): a small TypeScript library for tracking the active/inactive state
   of named UI elements (tabs, menus, modals, accordions). It has no runtime dependencies.
 - Vite (library mode) bundles it to ESM (`dist/index.js`) and CommonJS (`dist/index.cjs`). `tsc` emits the declarations
   to `dist/types/`. `dist/` is gitignored.
